@@ -12,7 +12,7 @@ else
     run_script=${script_path}"oltp_read_write.lua"
 fi
 
-sysbench  ${run_script}\
+sysbench ${run_script} \
     --mysql-host=$2 \
 	--mysql-port=$3 \
 	--mysql-user=root \
@@ -23,5 +23,5 @@ sysbench  ${run_script}\
 	--table-size=1000000 \
 	--report-interval=10 \
 	--threads=4 \
-	--time=80 \
+	--time=60 \
 	run >> $5

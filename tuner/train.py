@@ -2,3 +2,10 @@
 """
 Train the model
 """
+
+import sys
+
+sys.path.append('../')
+
+from environment import mysql
+

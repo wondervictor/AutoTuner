@@ -12,7 +12,6 @@ from torch.autograd import Variable
 
 from OUProcess import OUProcess
 from replay_memory import ReplayMemory
-from utils import Logger, get_timestamp
 
 
 def totensor(x):
@@ -162,13 +161,15 @@ class Critic(nn.Module):
 class DDPG(object):
 
     def __init__(self, n_states, n_actions, opt):
-
+        """ DDPG Algorithms
+        Args:
+            n_states: int, dimension of states
+            n_actions: int, dimension of actions
+            opt: dict, params
+        """
         self.n_states = n_states
         self.n_actions = n_actions
 
-        _time = get_timestamp()
-        self.logger = Logger('DDPG', log_file='../logs/{}_train.log'.format(_time))
-        del _time
         # Params
         self.alr = opt['alr']
         self.clr = opt['clr']
@@ -179,17 +180,17 @@ class DDPG(object):
 
         # Build Network
         self._build_network()
-        self.logger.info('Finish Initializing Networks')
+        print('Finish Initializing Networks')
         self.replay_memory = ReplayMemory(capacity=10000)
         self.noise = OUProcess(n_actions)
-        self.logger.info('DDPG Initialzed!')
+        print('DDPG Initialzed!')
 
     def _build_network(self):
 
-        self.actor = ActorLow(self.n_states, self.n_actions)
-        self.target_actor = ActorLow(self.n_states, self.n_actions)
-        self.critic = CriticLow(self.n_states, self.n_actions)
-        self.target_critic = CriticLow(self.n_states, self.n_actions)
+        self.actor = Actor(self.n_states, self.n_actions)
+        self.target_actor = Actor(self.n_states, self.n_actions)
+        self.critic = Critic(self.n_states, self.n_actions)
+        self.target_critic = Critic(self.n_states, self.n_actions)
 
         # if model params are provided, load them
         if len(self.model_name):
@@ -205,7 +206,8 @@ class DDPG(object):
         self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters())
         self.critic_optimizer = optimizer.Adam(lr=self.clr, params=self.critic.parameters())
 
-    def _update_target(self, target, source, tau):
+    @staticmethod
+    def _update_target(target, source, tau):
         for (target_param, param) in zip(target.parameters(), source.parameters()):
             target_param.data.copy_(
                 target_param.data * (1-tau) + param.data * tau
@@ -225,7 +227,8 @@ class DDPG(object):
         return states, next_states, actions, rewards, terminates
 
     def update(self):
-
+        """ Update the Actor and Critic with a batch data
+        """
         states, next_states, actions, rewards, terminates = self._sample_batch()
         batch_states = totensor(states)
         batch_next_states = Variable(torch.FloatTensor(next_states), volatile=True)
@@ -255,12 +258,16 @@ class DDPG(object):
         self.actor_optimizer.step()
         self.critic.train()
 
-        self.logger.info('Critic Loss:{} Actor Loss: {}'.format(loss.data[0], policy_loss.data[0]))
-
         self._update_target(self.target_critic, self.critic, tau=self.tau)
         self._update_target(self.target_actor, self.actor, tau=self.tau)
 
+        return loss.data[0], policy_loss.data[0]
+
     def choose_action(self, x):
+        """ Select Action according to the current state
+        Args:
+            x: np.array, current state
+        """
         self.actor.eval()
         act = self.actor(totensor([x.tolist()])).squeeze(0)
         self.actor.train()
@@ -269,12 +276,11 @@ class DDPG(object):
         action += self.noise.noise()
         return action
 
-    def apply_action(self, env, action):
-        next_state, reward, done, _ = env.step(action)
-        return next_state, reward, done
-
     def load_model(self, model_name):
-
+        """ Load Torch Model from files
+        Args:
+            model_name: str, model path
+        """
         self.actor.load_state_dict(
             torch.load('{}_actor.pth'.format(model_name))
         )
@@ -283,7 +289,11 @@ class DDPG(object):
         )
 
     def save_model(self, model_dir, title):
-
+        """ Save Torch Model from files
+        Args:
+            model_dir: str, model dir
+            title: str, model name
+        """
         torch.save(
             self.actor.state_dict(),
             '{}/{}_actor.pth'.format(model_dir, title)
