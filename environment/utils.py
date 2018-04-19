@@ -1,0 +1,119 @@
+# -*- coding: utf-8 -*-
+
+"""
+description: MySQL Env Utils
+"""
+
+import time
+import httplib
+import MySQLdb
+import xmlrpclib
+
+from configs import docker_config
+from warnings import filterwarnings
+filterwarnings('error', category=MySQLdb.Warning)
+
+
+value_type_metrics = [
+    'lock_deadlocks', 'lock_timeouts', 'lock_row_lock_time_max',
+    'lock_row_lock_time_avg', 'buffer_pool_size', 'buffer_pool_pages_total',
+    'buffer_pool_pages_misc', 'buffer_pool_pages_data', 'buffer_pool_bytes_data',
+    'buffer_pool_pages_dirty', 'buffer_pool_bytes_dirty', 'buffer_pool_pages_free',
+    'trx_rseg_history_len', 'file_num_open_files', 'innodb_page_size'
+]
+
+
+def get_metric_type(metric):
+
+    if metric in value_type_metrics:
+        return 'value'
+    else:
+        return 'counter'
+
+
+def get_metrics(config):
+    conn = MySQLdb.connect(
+        host=config['host'],
+        user=config['user'],
+        passwd=config['passwd'],
+        port=config['port']
+    )
+
+    cursor = conn.cursor()
+    cmd = 'SELECT * from information_schema.INNODB_METRICS where status="enabled" ORDER BY NAME'
+    cursor.execute(cmd)
+    data = cursor.fetchall()
+
+    def extract_info(line):
+        return line[0], line[2]
+
+    value = dict()
+    for l in data:
+        a, b = extract_info(l)
+        value[a] = b
+    return value
+
+
+def modify_configurations_by_start(server_ip, instance_name, configuration):
+    """ Modify the configurations by restarting the mysql through Docker
+    Args:
+        server_ip: str, instance's server IP Addr
+        instance_name: str, instance's name
+        configuration: dict, configurations
+    """
+    class TimeoutTransport(xmlrpclib.Transport):
+        timeout = 30.0
+
+        def set_timeout(self, timeout):
+            self.timeout = timeout
+
+        def make_connection(self, host):
+            h = httplib.HTTPConnection(host, timeout=self.timeout)
+            return h
+    transport = TimeoutTransport()
+    transport.set_timeout(60)
+
+    s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
+    params = ''
+    for key in configuration.keys():
+        params += ' --%s=%s' % (key, configuration[key])
+
+    while True:
+        try:
+            s.start_mysql(instance_name, params)
+        except xmlrpclib.Fault:
+            time.sleep(5)
+        break
+
+    return True
+
+
+def test_mysql(instance_name):
+    """ Test the mysql instance to see whether if it has been restarted
+    Args
+        instance_name: str, instance's name
+    """
+
+    db_config = docker_config[instance_name]
+    try:
+        db = MySQLdb.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            passwd=db_config['passwd'],
+            port=db_config['port']
+        )
+    except MySQLdb.Error:
+        return False
+    db.close()
+    return True
+
+
+# TODO:
+def read_machine():
+    """ Get the machine information, such as memory and disk
+
+    Return:
+
+    """
+    pass
+

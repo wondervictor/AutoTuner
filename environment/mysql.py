@@ -1,0 +1,434 @@
+# -*- coding: utf-8 -*-
+"""
+description: MySQL Environment
+"""
+
+import re
+import os
+import sys
+import time
+import json
+import threading
+import MySQLdb
+import numpy as np
+import configs
+import utils
+import knobs
+import requests
+
+TEMP_FILES = "/home/rmw/train_result/tmp/"
+PROJECT_DIR = "/home/rmw/"
+
+
+class MySQLEnv(object):
+
+    def __init__(self, wk_type='read', alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
+
+        self.db_info = None
+        self.wk_type = wk_type
+        self.score = 0.0
+        self.steps = 0
+        self.terminate = False
+        self.last_external_metrics = None
+
+        self.alpha = alpha
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.time_decay_1 = time_decay1
+        self.time_decay_2 = time_decay2
+
+        self.default_knobs = knobs.get_init_knobs()
+
+    @staticmethod
+    def _get_external_metrics(path):
+
+        def parse_sysbench_new(file_path):
+            with open(file_path) as f:
+                lines = f.read()
+            temporal_pattern = re.compile(
+                "tps: (\d+.\d+) qps: (\d+.\d+) \(r/w/o: (\d+.\d+)/(\d+.\d+)/(\d+.\d+)\)" 
+                " lat \(ms,95%\): (\d+.\d+) err/s: (\d+.\d+) reconn/s: (\d+.\d+)")
+            temporal = temporal_pattern.findall(lines)
+            tps = 0
+            latency = 0
+            for i in temporal[2:]:
+                tps += float(i[0])
+                latency += float(i[5])
+            tps /= 4
+            latency /= 4
+            return [tps, latency]
+
+        result = parse_sysbench_new(path)
+
+        return result
+
+    def _get_internal_metrics(self, internal_metrics):
+        """
+        Args:
+            internal_metrics: list,
+        Return:
+
+        """
+        _counter = 0
+        _period = 5
+        count = 12
+
+        def collect_metric(counter):
+            counter += 1
+            timer = threading.Timer(_period, collect_metric, (counter,))
+            timer.start()
+            if counter >= count:
+                timer.cancel()
+            try:
+                data = utils.get_metrics(self.db_info)
+                internal_metrics.append(data)
+            except MySQLdb.Error as e:
+                print("[GET Metrics]Exception:%s" % e.message)
+
+        collect_metric(_counter)
+
+        return internal_metrics
+
+    @staticmethod
+    def _post_handle(metrics):
+        result = np.zeros(63)
+
+        def do(metric_name, metric_values):
+            metric_type = utils.get_metric_type(metric_name)
+            if metric_type == 'counter':
+                return float(metric_values[-1] - metric_values[0])
+            else:
+                return float(sum(metric_values))/len(metric_values)
+
+        keys = metrics[0].keys()
+        keys.sort()
+        for idx in xrange(len(keys)):
+            key = keys[idx]
+            data = [x[key] for x in metrics]
+            result[idx] = do(key, data)
+
+        return result
+
+    def initialize(self):
+        """Initialize the mysql instance environment
+        """
+        pass
+
+    def eval(self, knob):
+        """ Evaluate the knobs
+        Args:
+            knob: dict, mysql parameters
+        Returns:
+            result: {tps, latency}
+        """
+        flag = self._apply_knobs(knob)
+        if not flag:
+            return {"tps": 0, "latency": 0}
+
+        external_metrics, _ = self._get_state()
+        return {"tps": external_metrics[0],
+                "latency": external_metrics[1]}
+
+    def step(self, knob):
+        """step
+        """
+        flag = self._apply_knobs(knob)
+        if not flag:
+            return -100.0, np.array([0] * 63), True, self.score - 100
+
+        external_metrics, internal_metrics = self._get_state()
+        reward = self._get_reward(external_metrics)
+        self.last_external_metrics = external_metrics
+        next_state = internal_metrics
+        terminate = self._terminate()
+        return reward, next_state, terminate, self.score
+
+    def _get_state(self):
+        """Collect the Internal State and External State
+        """
+        filename = TEMP_FILES
+        if not os.path.exists(filename):
+            os.mkdir(filename)
+        timestamp = int(time.time())
+        filename += '%s.txt' % timestamp
+        internal_metrics = []
+        self._get_internal_metrics(internal_metrics)
+
+        os.system("sh %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
+                                                                             self.wk_type,
+                                                                             self.db_info['host'],
+                                                                             self.db_info['port'],
+                                                                             self.db_info['passwd'],
+                                                                             filename))
+
+        time.sleep(10)
+
+        external_metrics = self._get_external_metrics(filename)
+        internal_metrics = self._post_handle(internal_metrics)
+
+        return external_metrics, internal_metrics
+
+    def _apply_knobs(self, knob):
+        """ Apply Knobs to the instance
+        """
+        pass
+
+    def _get_reward(self, external_metrics):
+        """
+        Args:
+            external_metrics: list, external metric info, including `tps` and `qps`
+        Return:
+            reward: float, a scalar reward
+        """
+        if self.last_external_metrics is None \
+                or self.last_external_metrics[0] == 0 \
+                or self.last_external_metrics[1] == 0:
+            reward = 0.01
+        else:
+            tps = (external_metrics[0] - self.last_external_metrics[0])/self.last_external_metrics[0]
+            latency = (external_metrics[1] - self.last_external_metrics[1])/self.last_external_metrics[1]
+
+            reward = 0  # tps - latency
+            if tps < 0:
+                reward += 2 * tps
+            else:
+                reward += tps
+            if latency > 0:
+                reward -= 2 * latency
+            else:
+                reward -= latency
+
+        reward *= self.alpha
+
+        self.score += reward
+
+        if self.score < -0.5:
+            self.terminate = True
+            reward = -10.0
+            self.score = -10.0
+
+        return reward
+
+    def _terminate(self):
+        return self.terminate
+
+
+class DockerServer(MySQLEnv):
+    """ Build an environment with Docker
+    """
+    def __init__(self, instance_name):
+        super(MySQLEnv, self).__init__()
+        self.instance_name = instance_name
+        self.db_info = configs.docker_config[instance_name]
+        self.server_ip = self.db_info['host']
+
+    def initialize(self):
+        """ Initialize the environment when an episode starts
+        Returns:
+            state: np.array, current state
+        """
+        self.score = 0.0
+        self.last_external_metrics = []
+        self.steps = 0
+        self.terminate = False
+
+        utils.modify_configurations_by_start(
+            server_ip=self.server_ip,
+            instance_name=self.instance_name,
+            configuration=self.default_knobs
+        )
+
+        time.sleep(20)
+        external_metrics, internal_metrics = self._get_state()
+        self.last_external_metrics = external_metrics
+        state = internal_metrics
+        print("[Env initialized]")
+        return state
+
+    def _apply_knobs(self, knob):
+        """ Apply the knobs to the mysql
+        Args:
+            knob: dict, mysql parameters
+        Returns:
+            flag: whether the setup is valid
+        """
+        self.steps += 1
+        utils.modify_configurations_by_start(
+            server_ip=self.server_ip,
+            instance_name=self.instance_name,
+            configuration=knob
+        )
+
+        steps = 0
+        max_steps = 45
+        flag = utils.test_mysql(self.instance_name)
+        while not flag and steps < max_steps:
+            time.sleep(5)
+            flag = utils.test_mysql(self.instance_name)
+            steps += 1
+
+        if not flag:
+            utils.modify_configurations_by_start(
+                server_ip=self.server_ip,
+                instance_name=self.instance_name,
+                configuration=self.default_knobs
+            )
+            params = ''
+            for key in knob.keys():
+                params += ' --%s=%s' % (key, knob[key])
+            with open('failed.log', 'a+') as f:
+                f.write('{}\n'.format(params))
+            return False
+
+        return True
+
+
+class TencentServer(MySQLEnv):
+    """ Build an environment in Tencent Cloud
+    """
+    URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
+
+    def __init__(self, instance_name, request_ip):
+        """Initialize `TencentServer` Class
+        Args:
+            instance_name: str, mysql instance name, get the database infomation
+            request_ip: str, http request URL
+        """
+        super(MySQLEnv, self).__init__()
+        self.instance_name = instance_name
+        self.db_info = configs.server_config[instance_name]
+        self.request_ip = request_ip
+
+    def _set_params(self, knob):
+        """ Set mysql parameters by send GET requests to server
+        Args:
+            knob: dict, mysql parameters
+        Return:
+            workid: str, point to the setting process
+        Raises:
+            Exception: setup failed
+        """
+        instance_id = self.db_info['instance_id']
+        operator = self.db_info['operator']
+        data = dict()
+        data["instanceid"] = instance_id
+        data["operator"] = operator
+        para_list = []
+        for kv in knob.items():
+            para_list.append({"name": str(kv[0]), "value": str(kv[1])})
+        data["para_list"] = para_list
+        data = json.dumps(data)
+        data = "data=" + data
+        r = requests.get(self.URL + '/set_mysql_param.cgi', data)
+        response = json.loads(r.text)
+        err = response['errno']
+        print(response)
+        if err != 0:
+            raise Exception("SET UP FAILED: {}".format(err))
+        workid = response['workid']
+        return workid
+
+    def _get_setup_state(self, workid):
+        """ Set mysql parameters by send GET requests to server
+        Args:
+            workid: str, point to the setting process
+        Return:
+            status: str, setup status (running, undoed)
+            progress: str, setup progress
+        Raises:
+            Exception: get state failed
+        """
+        instance_id = self.db_info['instance_id']
+        operator = self.db_info['operator']
+
+        data = dict()
+        data['instanceid'] = instance_id
+        data['operator'] = operator
+        data['workid'] = workid
+        data = json.dumps(data)
+        data = 'data=' + data
+
+        r = requests.get(self.URL + '/query_set_mysql_param_task.cgi', data)
+
+        response = json.loads(r.text)
+        err = response['errno']
+        progress = int(response['progress'])
+        status = response['status']
+
+        if err != 0:
+            raise Exception("GET STATE FAILED: {}".format(err))
+
+        return status, progress
+
+    def initialize(self):
+        """ Initialize the environment when an episode starts
+        Returns:
+            state: np.array, current state
+        """
+        self.score = 0.0
+        self.last_external_metrics = []
+        self.steps = 0
+        self.terminate = False
+        i = 3
+        while i >= 0:
+            try:
+                self._set_params(
+                    knob=self.default_knobs
+                )
+            except Exception as e:
+                print("{}".format(e.message))
+            else:
+                break
+            i -= 1
+        if i == -1:
+            print("Failed too many times!")
+            exit(-10)
+        time.sleep(30)
+        external_metrics, internal_metrics = self._get_state()
+        self.last_external_metrics = external_metrics
+        state = internal_metrics
+        print("[Env initialized]")
+        return state
+
+    def _apply_knobs(self, knob):
+        """ Apply the knobs to the mysql
+        Args:
+            knob: dict, mysql parameters
+        Returns:
+            flag: whether the setup is valid
+        """
+        self.steps += 1
+        i = 3
+        workid = ''
+        while i >= 0:
+            try:
+                workid = self._set_params(knob=knob)
+            except Exception as e:
+                print("{}".format(e.message))
+            else:
+                break
+            i -= 1
+        if i == -1:
+            print("Failed too many times!")
+            exit(-10)
+
+        steps = 0
+        max_steps = 35
+
+        status, progress = self._get_setup_state(workid=workid)
+
+        while status == 'running' and steps < max_steps:
+            time.sleep(5)
+            status, _ = self._get_setup_state(workid=workid)
+            steps += 1
+
+        if status == 'running' or status == 'undoed':
+            self._set_params(knob=self.default_knobs)
+            params = ''
+            for key in knob.keys():
+                params += ' --%s=%s' % (key, knob[key])
+            with open('failed.log', 'a+') as f:
+                f.write('{}\n'.format(params))
+            return False
+
+        return True
