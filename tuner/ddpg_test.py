@@ -5,8 +5,10 @@ Deep Deterministic Policy Gradient Model Test
 """
 
 import gym
+import numpy as np
 from ddpg import DDPG
 from utils import Logger
+from itertools import count
 
 config = {
     'model': '',
@@ -18,10 +20,11 @@ config = {
 }
 
 logger = Logger('DDPG_TEST')
-env = gym.make('Hopper-v1')
-
-n_actions = 3
-n_states = 11
+env = gym.make('MountainCarContinuous-v0')  # ('Hopper-v1')
+print(env.action_space, env.observation_space)
+print(env.action_space.low, env.action_space.high)
+n_actions = 1
+n_states = 2
 
 ddpg = DDPG(
     n_actions=n_actions,
@@ -29,17 +32,16 @@ ddpg = DDPG(
     opt=config
 )
 
-max_steps = 100
-
-for i in xrange(100):
+returns = []
+for i in xrange(10000):
     ddpg.reset()
     state = env.reset()
-    t = 0
-    while t < max_steps:
+    total_reward = 0.0
+    for t in count():
 
         action = ddpg.choose_action(state)
         next_state, reward, done = ddpg.apply_action(env, action)
-        env.render()
+        # env.render()
         ddpg.replay_memory.push(
             state=state,
             action=action,
@@ -47,12 +49,18 @@ for i in xrange(100):
             terminate=done,
             reward=reward
         )
+        total_reward += reward
 
-        t += 1
-        logger.info('Episode: {}/{100} Step: {} Reward: {} Action: {} Terminate: {}'
-                    .format(i, t, reward, action, done)
-                    )
+        # logger.info('Episode: {}/100 Step: {} Reward: {} Action: {} Terminate: {}'
+        #             .format(i, t, reward, action, done)
+        #             )
 
         state = next_state
         if done:
             break
+
+        if len(ddpg.replay_memory) > 100:
+            ddpg.update()
+    returns.append(total_reward)
+    print("Episode: {} Return: {} Mean Return: {} STD: {}".format(i, total_reward, np.mean(returns), np.std(returns)))
+

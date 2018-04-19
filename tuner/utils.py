@@ -44,16 +44,16 @@ class Logger:
         return date_str
 
     def warn(self, msg):
-        msg = "%s[WARN]" % self.get_timestr()
+        msg = "%s[WARN] %s" % (self.get_timestr(), msg)
         self.logger.warning(msg)
         self._write_file(msg)
 
     def info(self, msg):
-        msg = "%s[INFO]" % self.get_timestr()
-        self.logger.warning(msg)
+        msg = "%s[INFO] %s" % (self.get_timestr(), msg)
+        # self.logger.warning(msg)
         self._write_file(msg)
 
     def error(self, msg):
-        msg = "%s[ERROR]" % self.get_timestr()
+        msg = "%s[ERROR] %s" % (self.get_timestr(), msg)
         self.logger.warning(msg)
         self._write_file(msg)
