@@ -108,12 +108,20 @@ def test_mysql(instance_name):
     return True
 
 
-# TODO:
 def read_machine():
     """ Get the machine information, such as memory and disk
 
     Return:
 
     """
-    pass
+    f = open("/proc/meminfo", 'r')
+    line = f.readlines()[0]
+    f.close()
+    line = line.strip('\r\n')
+    total = int(line.split(':')[1].split()[0])*1024
+    return total
+
+
+
+
 

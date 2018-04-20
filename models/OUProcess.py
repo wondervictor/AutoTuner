@@ -10,7 +10,7 @@ import numpy as np
 # from https://github.com/songrotek/DDPG/blob/master/ou_noise.py
 class OUProcess(object):
 
-    def __init__(self, n_actions, theta=0.15, mu=0, sigma=1., ):
+    def __init__(self, n_actions, theta=0.15, mu=0, sigma=0.1, ):
 
         self.n_actions = n_actions
         self.theta = theta

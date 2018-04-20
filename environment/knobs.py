@@ -4,6 +4,7 @@ desciption: Knob information
 
 """
 
+import utils
 
 KNOBS = ['skip_name_resolve',
          'table_open_cache',
@@ -44,13 +45,18 @@ KNOB_DETAILS = {
 
 }
 
+memory_size = utils.read_machine()
+# MB
+memory_size = memory_size / (1024*1024)
+
+print("Machine Memory: {} GiB".format(memory_size))
 
 UNIFIED_KNOBS = {
     'skip_name_resolve': ['enum', ['OFF', 'ON'], None],
     'table_open_cache': ['integer', [1, 524288, 2000], None],
     'max_connections': ['integer', [1, 100000, 151], None],
     # innodb_buffer_pool_size unit: MB
-    'innodb_buffer_pool_size': ['integer_MB', [1, 32768, 16384], None],
+    'innodb_buffer_pool_size': ['integer_MB', [1, int(memory_size*0.9), 16384], None],
     # WARN: innodb_buffer_pool_size 80% of memory
     'innodb_buffer_pool_instances': ['integer', [1, 64, 8], None],
     'innodb_log_files_in_group': ['integer', [2, 100, 2], None],
@@ -62,7 +68,7 @@ UNIFIED_KNOBS = {
     'innodb_file_per_table': ['enum', ['OFF', 'ON'], None],
     'binlog_checksum': ['enum', ['NONE', 'CRC32'], None],
     # binlog_cache_size unit: MB
-    'binlog_cache_size': ['integer_MB', [32768, 0.03125], None],
+    'binlog_cache_size': ['integer_MB', [0.001, int(memory_size*0.9), 0.03125], None],
     # max_binlog_cache_size unit: GB
     'max_binlog_cache_size': ['integer_GB', [4096, 17179869183, 17179869183], None],
     # max_binlog_size unit: MB
@@ -166,6 +172,7 @@ def gen_continuous(action):
         else:
             enum_size = len(knob_value)
             enum_index = int(enum_size * action[idx])
+            enum_index = min(enum_size - 1, enum_index)
             eval_value = knob_value[enum_index]
 
         if name == 'innodb_log_file_size':

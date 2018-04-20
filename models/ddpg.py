@@ -273,7 +273,7 @@ class DDPG(object):
         action = act.data.numpy()
 
         action += self.noise.noise()
-        return action.clip(0, 1)
+        return action.clip(0.02, 1)
 
     def load_model(self, model_name):
         """ Load Torch Model from files
