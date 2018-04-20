@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import pickle
 import logging
 import datetime
 
@@ -57,3 +58,10 @@ class Logger:
         msg = "%s[ERROR] %s" % (self.get_timestr(), msg)
         self.logger.error(msg)
         self._write_file(msg)
+
+
+def save_state_actions(state_action, filename):
+
+    f = open(filename, 'wb')
+    pickle.dump(state_action, f)
+    f.close()

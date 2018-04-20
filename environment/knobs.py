@@ -183,4 +183,15 @@ def save_knobs(knob, metrics, knob_file):
         metrics: list, tps and latency
         knob_file: str, file path
     """
-    pass
+    # format: tps, latency, knobstr: [#knobname=value#]
+    knob_strs = []
+    for kv in knob.items():
+        knob_strs.append('{}:{}'.format(kv[0], kv[1]))
+    result_str = '{},{},'.format(metrics[0], metrics[1])
+    knob_str = "#".join(knob_strs)
+    result_str += knob_str
+
+    with open(knob_file, 'a+') as f:
+        f.write(result_str+'\n')
+
+

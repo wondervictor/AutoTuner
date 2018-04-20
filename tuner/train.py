@@ -58,6 +58,9 @@ if not os.path.exists('save_memory'):
 if not os.path.exists('save_knobs'):
     os.mkdir('save_knobs')
 
+if not os.path.exists('save_state_actions'):
+    os.mkdir('save_state_actions')
+
 expr_name = '{}_{}'.format(opt.method, str(utils.get_timestamp()))
 
 logger = utils.Logger(
@@ -86,8 +89,11 @@ if opt.method == 'ddpg':
 else:
     accumulate_loss = 0
 
+fine_state_actions = []
+
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
+    model.reset()
     t = 0
     while t < 30:
         state = current_state
@@ -115,6 +121,9 @@ for episode in xrange(tconfig['epoches']):
             terminate=done
         )
 
+        if score > 0.5:
+            fine_state_actions.append((state, action))
+
         current_state = next_state
         t = t + 1
         step_counter += 1
@@ -139,6 +148,7 @@ for episode in xrange(tconfig['epoches']):
 
         if step_counter % 10 == 0:
             model.replay_memory.save('save_memory/{}.pkl'.format(expr_name))
+            utils.save_state_actions(fine_state_actions, 'save_state_actions/{}.pkl'.format(expr_name))
 
         if done:
             break

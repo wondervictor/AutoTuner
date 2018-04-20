@@ -140,6 +140,11 @@ class MySQLEnv(object):
         self.last_external_metrics = external_metrics
         next_state = internal_metrics
         terminate = self._terminate()
+        knobs.save_knobs(
+            self.default_knobs,
+            metrics=external_metrics,
+            knob_file='%sAutoTuner/save_knobs/knob_metric.txt' % PROJECT_DIR
+        )
         return reward, next_state, terminate, self.score
 
     def _get_state(self):
@@ -248,6 +253,11 @@ class DockerServer(MySQLEnv):
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
         state = internal_metrics
+        knobs.save_knobs(
+            self.default_knobs,
+            metrics=external_metrics,
+            knob_file='%sAutoTuner/save_knobs/knob_metric.txt' % PROJECT_DIR
+        )
         print("[Env initialized]")
         return state
 
@@ -401,6 +411,11 @@ class TencentServer(MySQLEnv):
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
         state = internal_metrics
+        knobs.save_knobs(
+            self.default_knobs,
+            metrics=external_metrics,
+            knob_file='%sAutoTuner/save_knobs/knob_metric.txt' % PROJECT_DIR
+        )
         print("[Env initialized]")
         return state
 
