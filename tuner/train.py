@@ -19,15 +19,15 @@ parser.add_argument('--tencent', action='store_true', help='Use Tencent Server')
 parser.add_argument('--params', type=str, default='', help='Load existing parameters')
 parser.add_argument('--workload', type=str, default='read', help='Workload type [`read`, `write`, `readwrite`]')
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
-parser.add_argument('--method', type='str', default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
+parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
 
 opt = parser.parse_args()
 
 # Create Environment
 if opt.tencent:
-    env = environment.TencentServer(opt.instance, request_url=tuner_configs.TENCENT_URL)
+    env = environment.TencentServer(wk_type=opt.workload,instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
 else:
-    env = environment.DockerServer(opt.instance)
+    env = environment.DockerServer(wk_type=opt.workload, instance_name=opt.instance)
 
 tconfig = tuner_configs.config
 
@@ -119,7 +119,7 @@ for episode in xrange(tconfig['epoches']):
         t = t + 1
         step_counter += 1
 
-        if len(model.replay_memory) > 5 * tconfig['batch_size']:
+        if len(model.replay_memory) > 2 * tconfig['batch_size']:
             losses = []
             for i in xrange(5):
                 losses.append(model.update())

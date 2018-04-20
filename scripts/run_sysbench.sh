@@ -2,10 +2,10 @@
 
 script_path="/home/rmw/sysbench-1.0/src/lua/"
 
-if [ ${1} == "read" ]
+if [ "${1}" == "read" ]
 then
     run_script=${script_path}"oltp_read_only.lua"
-elif [ ${1} == "write" ]
+elif [ "${1}" == "write" ]
 then
     run_script=${script_path}"oltp_write_only.lua"
 else

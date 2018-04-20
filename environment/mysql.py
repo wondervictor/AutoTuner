@@ -153,7 +153,7 @@ class MySQLEnv(object):
         internal_metrics = []
         self._get_internal_metrics(internal_metrics)
 
-        os.system("sh %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
+        os.system("bash %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
                                                                              self.wk_type,
                                                                              self.db_info['host'],
                                                                              self.db_info['port'],
@@ -215,11 +215,18 @@ class MySQLEnv(object):
 class DockerServer(MySQLEnv):
     """ Build an environment with Docker
     """
-    def __init__(self, instance_name):
-        super(MySQLEnv, self).__init__()
+    def __init__(self, wk_type, instance_name):
+        MySQLEnv.__init__(self, wk_type)
+        self.wk_type = wk_type
+        self.score = 0.0
+        self.steps = 0
+        self.terminate = False
+        self.last_external_metrics = None
         self.instance_name = instance_name
         self.db_info = configs.docker_config[instance_name]
         self.server_ip = self.db_info['host']
+        self.alpha = 1.0
+        self.default_knobs = knobs.get_init_knobs()
 
     def initialize(self):
         """ Initialize the environment when an episode starts
@@ -287,16 +294,24 @@ class TencentServer(MySQLEnv):
     """
     URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
 
-    def __init__(self, instance_name, request_url):
+    def __init__(self, wk_type, instance_name, request_url):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
             request_url: str, http request URL
         """
-        super(MySQLEnv, self).__init__()
+        MySQLEnv.__init__(self, wk_type)
+        # super(MySQLEnv, self).__init__()
+        self.wk_type = wk_type
+        self.score = 0.0
+        self.steps = 0
+        self.terminate = False
+        self.last_external_metrics = None
         self.instance_name = instance_name
         self.db_info = configs.server_config[instance_name]
         self.url = request_url
+        self.alpha = 1.0
+        self.default_knobs = knobs.get_init_knobs()
 
     def _set_params(self, knob):
         """ Set mysql parameters by send GET requests to server
