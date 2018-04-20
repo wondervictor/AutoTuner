@@ -73,7 +73,7 @@ UNIFIED_KNOBS = {
     'max_binlog_cache_size': ['integer_GB', [4096, 17179869183, 17179869183], None],
     # max_binlog_size unit: MB
     'max_binlog_size': ['integer_MB', [0.00390625, 1024, 1024], None],
-    'binlog_format': ['enum', ['ROW', 'STATEMENT', 'MIXED'], None],
+    'binlog_format': ['enum', ['ROW', 'MIXED'], None],
 
 }
 

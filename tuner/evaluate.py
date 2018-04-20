@@ -20,6 +20,7 @@ parser.add_argument('--params', type=str, required=True, help='Load existing par
 parser.add_argument('--workload', type=str, default='read', help='Workload type [`read`, `write`, `readwrite`]')
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
+parser.add_argument('--memory', type=str, default='', help='add replay memory')
 
 opt = parser.parse_args()
 
@@ -73,6 +74,18 @@ def generate_knob(action, method):
     else:
         return environment.gen_discrete(action, current_knob)
 
+
+if len(opt.memory) > 0:
+    with open(opt.memory, 'rb') as f:
+        provided_memory = pickle.load(f)
+    for i in xrange(len(provided_memory)):
+        model.replay_memory.push(
+            state=provided_memory[i][0],
+            action=provided_memory[i][1],
+            next_state=provided_memory[i][2],
+            reward=provided_memory[i][3],
+            terminate=provided_memory[i][4]
+        )
 
 step_counter = 0
 train_step = 0
