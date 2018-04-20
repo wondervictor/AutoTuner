@@ -4,7 +4,6 @@ Deep Deterministic Policy Gradient Model
 
 """
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optimizer
@@ -101,7 +100,7 @@ class Actor(nn.Module):
             nn.LeakyReLU(negative_slope=0.2)
         )
         self._init_weights()
-        self.act = nn.Tanh()
+        self.act = nn.Sigmoid()
 
     def _init_weights(self):
 
@@ -181,7 +180,7 @@ class DDPG(object):
         # Build Network
         self._build_network()
         print('Finish Initializing Networks')
-        self.replay_memory = ReplayMemory(capacity=10000)
+        self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
         self.noise = OUProcess(n_actions)
         print('DDPG Initialzed!')
 

@@ -5,7 +5,6 @@ description: MySQL Environment
 
 import re
 import os
-import sys
 import time
 import json
 import threading
@@ -288,16 +287,16 @@ class TencentServer(MySQLEnv):
     """
     URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
 
-    def __init__(self, instance_name, request_ip):
+    def __init__(self, instance_name, request_url):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
-            request_ip: str, http request URL
+            request_url: str, http request URL
         """
         super(MySQLEnv, self).__init__()
         self.instance_name = instance_name
         self.db_info = configs.server_config[instance_name]
-        self.request_ip = request_ip
+        self.url = request_url
 
     def _set_params(self, knob):
         """ Set mysql parameters by send GET requests to server
@@ -319,7 +318,7 @@ class TencentServer(MySQLEnv):
         data["para_list"] = para_list
         data = json.dumps(data)
         data = "data=" + data
-        r = requests.get(self.URL + '/set_mysql_param.cgi', data)
+        r = requests.get(self.url + '/set_mysql_param.cgi', data)
         response = json.loads(r.text)
         err = response['errno']
         print(response)
@@ -348,7 +347,7 @@ class TencentServer(MySQLEnv):
         data = json.dumps(data)
         data = 'data=' + data
 
-        r = requests.get(self.URL + '/query_set_mysql_param_task.cgi', data)
+        r = requests.get(self.url + '/query_set_mysql_param_task.cgi', data)
 
         response = json.loads(r.text)
         err = response['errno']

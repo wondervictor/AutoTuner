@@ -7,7 +7,6 @@ Deep Deterministic Policy Gradient Model Test
 import gym
 import numpy as np
 from ddpg import DDPG
-from utils import Logger
 from itertools import count
 
 config = {
@@ -19,7 +18,6 @@ config = {
     'tau': 0.002
 }
 
-logger = Logger('DDPG_TEST')
 env = gym.make('MountainCarContinuous-v0')  # ('Hopper-v1')
 print(env.action_space, env.observation_space)
 print(env.action_space.low, env.action_space.high)
@@ -50,10 +48,6 @@ for i in xrange(10000):
             reward=reward
         )
         total_reward += reward
-
-        # logger.info('Episode: {}/100 Step: {} Reward: {} Action: {} Terminate: {}'
-        #             .format(i, t, reward, action, done)
-        #             )
 
         state = next_state
         if done:

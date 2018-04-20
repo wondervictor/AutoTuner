@@ -65,7 +65,7 @@ def get_init_knobs():
     return knobs
 
 
-def apply_action(action, knobs):
+def gen_discrete(action, knobs):
 
     result = {}
     for idx in xrange(num_knobs):
@@ -120,3 +120,15 @@ def apply_action(action, knobs):
     return result
 
 
+def gen_continuous(action):
+    pass
+
+
+def save_knobs(knob, metrics, knob_file):
+    """ Save Knobs and their metrics to files
+    Args:
+        knob: dict, knob content
+        metrics: list, tps and latency
+        knob_file: str, file path
+    """
+    pass

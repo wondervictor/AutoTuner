@@ -111,6 +111,9 @@ memory
 
 # Log
 logs
+log
+save_memory
+save_knobs
 
 # Result
 result

@@ -50,10 +50,10 @@ class Logger:
 
     def info(self, msg):
         msg = "%s[INFO] %s" % (self.get_timestr(), msg)
-        # self.logger.warning(msg)
+        self.logger.info(msg)
         self._write_file(msg)
 
     def error(self, msg):
         msg = "%s[ERROR] %s" % (self.get_timestr(), msg)
-        self.logger.warning(msg)
+        self.logger.error(msg)
         self._write_file(msg)
