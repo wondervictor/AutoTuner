@@ -49,7 +49,7 @@ memory_size = utils.read_machine()
 # MB
 memory_size = memory_size / (1024*1024)
 
-print("Machine Memory: {} GiB".format(memory_size))
+print("Machine Memory: {} MiB".format(memory_size))
 
 UNIFIED_KNOBS = {
     'skip_name_resolve': ['enum', ['OFF', 'ON'], None],
