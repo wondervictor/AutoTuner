@@ -61,7 +61,7 @@ if not os.path.exists('save_knobs'):
 if not os.path.exists('save_state_actions'):
     os.mkdir('save_state_actions')
 
-expr_name = '{}_{}'.format(opt.method, str(utils.get_timestamp()))
+expr_name = 'train_{}_{}'.format(opt.method, str(utils.get_timestamp()))
 
 logger = utils.Logger(
     name=opt.method,
