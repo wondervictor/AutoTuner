@@ -141,7 +141,7 @@ class MySQLEnv(object):
         next_state = internal_metrics
         terminate = self._terminate()
         knobs.save_knobs(
-            self.default_knobs,
+            knob=knob,
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
@@ -159,11 +159,11 @@ class MySQLEnv(object):
         self._get_internal_metrics(internal_metrics)
 
         os.system("bash %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
-                                                                             self.wk_type,
-                                                                             self.db_info['host'],
-                                                                             self.db_info['port'],
-                                                                             self.db_info['passwd'],
-                                                                             filename))
+                                                                               self.wk_type,
+                                                                               self.db_info['host'],
+                                                                               self.db_info['port'],
+                                                                               self.db_info['passwd'],
+                                                                               filename))
 
         time.sleep(10)
 
