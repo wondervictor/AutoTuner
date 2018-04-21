@@ -20,6 +20,7 @@ parser.add_argument('--params', type=str, default='', help='Load existing parame
 parser.add_argument('--workload', type=str, default='read', help='Workload type [`read`, `write`, `readwrite`]')
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
+parser.add_argument('--memory', type=str, default='', help='add replay memory')
 
 opt = parser.parse_args()
 
@@ -61,7 +62,7 @@ if not os.path.exists('save_knobs'):
 if not os.path.exists('save_state_actions'):
     os.mkdir('save_state_actions')
 
-expr_name = '{}_{}'.format(opt.method, str(utils.get_timestamp()))
+expr_name = 'train_{}_{}'.format(opt.method, str(utils.get_timestamp()))
 
 logger = utils.Logger(
     name=opt.method,
@@ -90,6 +91,18 @@ else:
     accumulate_loss = 0
 
 fine_state_actions = []
+
+if len(opt.memory) > 0:
+    with open(opt.memory, 'rb') as f:
+        provided_memory = pickle.load(f)
+    for i in xrange(len(provided_memory)):
+        model.replay_memory.push(
+            state=provided_memory[i][0],
+            action=provided_memory[i][1],
+            next_state=provided_memory[i][2],
+            reward=provided_memory[i][3],
+            terminate=provided_memory[i][4]
+        )
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()

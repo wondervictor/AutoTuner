@@ -439,7 +439,7 @@ class TencentServer(MySQLEnv):
             i -= 1
         if i == -1:
             print("Failed too many times!")
-            exit(-10)
+            return False
 
         steps = 0
         max_steps = 35
