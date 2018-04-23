@@ -16,7 +16,7 @@
 
 *简化版
 
-````python
+```` python
 tps = 并发提高百分比
 latency = 延迟下降百分比
 

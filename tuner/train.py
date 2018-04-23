@@ -62,6 +62,9 @@ if not os.path.exists('save_knobs'):
 if not os.path.exists('save_state_actions'):
     os.mkdir('save_state_actions')
 
+if not os.path.exists('model_params'):
+    os.mkdir('model_params')
+
 expr_name = 'train_{}_{}'.format(opt.method, str(utils.get_timestamp()))
 
 logger = utils.Logger(
@@ -159,9 +162,14 @@ for episode in xrange(tconfig['epoches']):
                     opt.method, episode, t, accumulate_loss/train_step
                 ))
 
+        # save replay memory
         if step_counter % 10 == 0:
             model.replay_memory.save('save_memory/{}.pkl'.format(expr_name))
             utils.save_state_actions(fine_state_actions, 'save_state_actions/{}.pkl'.format(expr_name))
+
+        # save network
+        if step_counter % 50 == 0:
+            model.save_model('model_params', title='{}_{}'.format(expr_name, step_counter))
 
         if done:
             break

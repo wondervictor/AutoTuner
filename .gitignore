@@ -115,6 +115,7 @@ log
 save_memory
 save_knobs
 save_state_actions
+model_params
 
 # Result
 result

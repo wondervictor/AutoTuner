@@ -50,11 +50,13 @@ class MySQLEnv(object):
             temporal = temporal_pattern.findall(lines)
             tps = 0
             latency = 0
+
             for i in temporal[2:]:
                 tps += float(i[0])
                 latency += float(i[5])
-            tps /= 4
-            latency /= 4
+            num_samples = len(temporal[2:])
+            tps /= num_samples
+            latency /= num_samples
             return [tps, latency]
 
         result = parse_sysbench_new(path)

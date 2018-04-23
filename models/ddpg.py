@@ -159,12 +159,13 @@ class Critic(nn.Module):
 
 class DDPG(object):
 
-    def __init__(self, n_states, n_actions, opt):
+    def __init__(self, n_states, n_actions, opt, supervised=False):
         """ DDPG Algorithms
         Args:
             n_states: int, dimension of states
             n_actions: int, dimension of actions
             opt: dict, params
+            supervised, bool, pre-train the actor with supervised learning
         """
         self.n_states = n_states
         self.n_actions = n_actions
@@ -177,12 +178,21 @@ class DDPG(object):
         self.gamma = opt['gamma']
         self.tau = opt['tau']
 
-        # Build Network
-        self._build_network()
-        print('Finish Initializing Networks')
-        self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
-        self.noise = OUProcess(n_actions)
-        print('DDPG Initialzed!')
+        if supervised:
+            self._build_actor()
+            print("Supervised Learning Initialized")
+        else:
+            # Build Network
+            self._build_network()
+            print('Finish Initializing Networks')
+            self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
+            self.noise = OUProcess(n_actions)
+            print('DDPG Initialzed!')
+
+    def _build_actor(self):
+        self.actor = Actor(self.n_states, self.n_actions)
+        self.actor_criterion = nn.MSELoss()
+        self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters())
 
     def _build_network(self):
 
@@ -230,14 +240,14 @@ class DDPG(object):
         """
         states, next_states, actions, rewards, terminates = self._sample_batch()
         batch_states = totensor(states)
-        batch_next_states = Variable(torch.FloatTensor(next_states), volatile=True)
+        batch_next_states = Variable(torch.FloatTensor(next_states))
         batch_actions = totensor(actions)
         batch_rewards = totensor(rewards)
         mask = [0 if x else 1 for x in terminates]
         mask = totensor(mask)
 
         target_next_actions = self.target_actor(batch_next_states)
-        target_next_value = self.target_critic(batch_next_states, target_next_actions).squeeze(1)
+        target_next_value = self.target_critic(batch_next_states, target_next_actions).detach().squeeze(1)
         target_next_value.volatile = False
         current_value = self.critic(batch_states, batch_actions)
         next_value = batch_rewards + mask * target_next_value * self.gamma
@@ -302,3 +312,53 @@ class DDPG(object):
             self.critic.state_dict(),
             '{}/{}_critic.pth'.format(model_dir, title)
         )
+
+    def save_actor(self, path):
+        """ save actor network
+        Args:
+             path, str, path to save
+        """
+        torch.save(
+            self.actor.state_dict(),
+            path
+        )
+
+    def load_actor(self, path):
+        """ load actor network
+        Args:
+             path, str, path to load
+        """
+        self.actor.load_state_dict(
+            torch.load(path)
+        )
+
+    def train_actor(self, batch_data, is_train=True):
+        """ Train the actor separately with data
+        Args:
+            batch_data: tuple, (states, actions)
+            is_train: bool
+        Return:
+            _loss: float, training loss
+        """
+        states, action = batch_data
+
+        if is_train:
+            self.actor.train()
+            pred = self.actor(totensor(states))
+            action = totensor(action)
+
+            _loss = self.actor_criterion(pred, action)
+
+            self.actor_optimizer.zero_grad()
+            _loss.backward()
+            self.actor_optimizer.step()
+
+        else:
+            self.actor.eval()
+            pred = self.actor(totensor(states))
+            action = totensor(action)
+            _loss = self.actor_criterion(pred, action)
+
+        return _loss.data[0]
+
+
