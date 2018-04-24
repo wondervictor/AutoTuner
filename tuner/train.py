@@ -36,8 +36,8 @@ tconfig = tuner_configs.config
 if opt.method == 'ddpg':
 
     ddpg_opt = dict()
-    ddpg_opt['tau'] = 0.01
-    ddpg_opt['alr'] = 0.0005
+    ddpg_opt['tau'] = 0.001
+    ddpg_opt['alr'] = 0.0001
     ddpg_opt['clr'] = 0.001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
@@ -86,6 +86,11 @@ def generate_knob(action, method):
         return environment.gen_discrete(action, current_knob)
 
 
+# OUProcess
+origin_sigma = 0.15
+sigma = origin_sigma
+# decay rate
+sigma_decay_rate = 0.95
 step_counter = 0
 train_step = 0
 if opt.method == 'ddpg':
@@ -96,20 +101,11 @@ else:
 fine_state_actions = []
 
 if len(opt.memory) > 0:
-    with open(opt.memory, 'rb') as f:
-        provided_memory = pickle.load(f)
-    for i in xrange(len(provided_memory)):
-        model.replay_memory.push(
-            state=provided_memory[i][0],
-            action=provided_memory[i][1],
-            next_state=provided_memory[i][2],
-            reward=provided_memory[i][3],
-            terminate=provided_memory[i][4]
-        )
+    model.replay_memory.load_memory(opt.memory)
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
-    model.reset()
+    model.reset(sigma)
     t = 0
     while t < 30:
         state = current_state
@@ -146,7 +142,7 @@ for episode in xrange(tconfig['epoches']):
 
         if len(model.replay_memory) > 2 * tconfig['batch_size']:
             losses = []
-            for i in xrange(5):
+            for i in xrange(2):
                 losses.append(model.update())
                 train_step += 1
 
@@ -166,6 +162,7 @@ for episode in xrange(tconfig['epoches']):
         if step_counter % 10 == 0:
             model.replay_memory.save('save_memory/{}.pkl'.format(expr_name))
             utils.save_state_actions(fine_state_actions, 'save_state_actions/{}.pkl'.format(expr_name))
+            sigma = origin_sigma*(sigma_decay_rate ** (step_counter/10))
 
         # save network
         if step_counter % 50 == 0:

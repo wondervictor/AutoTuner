@@ -100,7 +100,7 @@ class Actor(nn.Module):
             nn.LeakyReLU(negative_slope=0.2)
         )
         self._init_weights()
-        self.act = nn.Sigmoid()
+        self.act = nn.Tanh()
 
     def _init_weights(self):
 
@@ -131,7 +131,6 @@ class Critic(nn.Module):
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(64),
             nn.Linear(64, 1),
-            nn.LeakyReLU(negative_slope=0.2),
         )
         self._init_weights()
 
@@ -222,8 +221,8 @@ class DDPG(object):
                 target_param.data * (1-tau) + param.data * tau
             )
 
-    def reset(self):
-        self.noise.reset()
+    def reset(self, sigma):
+        self.noise.reset(sigma)
 
     def _sample_batch(self):
         batch = self.replay_memory.sample(self.batch_size)
@@ -240,14 +239,14 @@ class DDPG(object):
         """
         states, next_states, actions, rewards, terminates = self._sample_batch()
         batch_states = totensor(states)
-        batch_next_states = Variable(torch.FloatTensor(next_states))
+        batch_next_states = Variable(torch.FloatTensor(next_states), volatile=True)
         batch_actions = totensor(actions)
         batch_rewards = totensor(rewards)
         mask = [0 if x else 1 for x in terminates]
         mask = totensor(mask)
 
         target_next_actions = self.target_actor(batch_next_states)
-        target_next_value = self.target_critic(batch_next_states, target_next_actions).detach().squeeze(1)
+        target_next_value = self.target_critic(batch_next_states, target_next_actions).squeeze(1)
 
         current_value = self.critic(batch_states, batch_actions)
         next_value = batch_rewards + mask * target_next_value * self.gamma
