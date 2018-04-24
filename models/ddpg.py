@@ -239,14 +239,14 @@ class DDPG(object):
         """
         states, next_states, actions, rewards, terminates = self._sample_batch()
         batch_states = totensor(states)
-        batch_next_states = Variable(torch.FloatTensor(next_states), volatile=True)
+        batch_next_states = Variable(torch.FloatTensor(next_states))
         batch_actions = totensor(actions)
         batch_rewards = totensor(rewards)
         mask = [0 if x else 1 for x in terminates]
         mask = totensor(mask)
 
-        target_next_actions = self.target_actor(batch_next_states)
-        target_next_value = self.target_critic(batch_next_states, target_next_actions).squeeze(1)
+        target_next_actions = self.target_actor(batch_next_states).detach()
+        target_next_value = self.target_critic(batch_next_states, target_next_actions).detach().squeeze(1)
 
         current_value = self.critic(batch_states, batch_actions)
         next_value = batch_rewards + mask * target_next_value * self.gamma

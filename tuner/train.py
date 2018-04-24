@@ -102,6 +102,7 @@ fine_state_actions = []
 
 if len(opt.memory) > 0:
     model.replay_memory.load_memory(opt.memory)
+    print("Load Memory: {}".format(len(model.replay_memory)))
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
