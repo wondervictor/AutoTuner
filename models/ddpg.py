@@ -100,7 +100,7 @@ class Actor(nn.Module):
             nn.LeakyReLU(negative_slope=0.2)
         )
         self._init_weights()
-        self.act = nn.Tanh()
+        self.act = nn.Sigmoid()
 
     def _init_weights(self):
 
