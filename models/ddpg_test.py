@@ -32,7 +32,7 @@ ddpg = DDPG(
 
 returns = []
 for i in xrange(10000):
-    ddpg.reset()
+    ddpg.reset(0.1)
     state = env.reset()
     total_reward = 0.0
     for t in count():

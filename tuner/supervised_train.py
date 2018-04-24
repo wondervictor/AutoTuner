@@ -52,7 +52,7 @@ if opt.phase == 'train':
     expr_name = 'sl_train_ddpg_{}'.format(str(utils.get_timestamp()))
 
     logger = utils.Logger(
-        name="train",
+        name='ddpg',
         log_file='log/{}.log'.format(expr_name)
     )
 

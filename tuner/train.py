@@ -108,7 +108,7 @@ for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
     model.reset(sigma)
     t = 0
-    while t < 30:
+    while True:
         state = current_state
         action = model.choose_action(state)
         if opt.method == 'ddpg':

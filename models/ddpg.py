@@ -203,6 +203,7 @@ class DDPG(object):
         # if model params are provided, load them
         if len(self.model_name):
             self.load_model(model_name=self.model_name)
+            print("Loading model from file: {}".format(self.model_name))
 
         # Copy actor's parameters
         self._update_target(self.target_actor, self.actor, tau=1.0)

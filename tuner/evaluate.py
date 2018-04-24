@@ -36,8 +36,8 @@ tconfig = tuner_configs.config
 if opt.method == 'ddpg':
 
     ddpg_opt = dict()
-    ddpg_opt['tau'] = 0.01
-    ddpg_opt['alr'] = 0.0005
+    ddpg_opt['tau'] = 0.001
+    ddpg_opt['alr'] = 0.0001
     ddpg_opt['clr'] = 0.001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
@@ -78,8 +78,6 @@ def generate_knob(action, method):
 if len(opt.memory) > 0:
     model.replay_memory.load_memory(opt.memory)
     print("Load Memory: {}".format(len(model.replay_memory)))
-
-
 step_counter = 0
 train_step = 0
 if opt.method == 'ddpg':
