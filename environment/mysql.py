@@ -402,21 +402,16 @@ class TencentServer(MySQLEnv):
         self.last_external_metrics = []
         self.steps = 0
         self.terminate = False
+
+        flag = self._apply_knobs(self.default_knobs)
         i = 3
-        while i >= 0:
-            try:
-                self._set_params(
-                    knob=self.default_knobs
-                )
-            except Exception as e:
-                print("{}".format(e.message))
-            else:
-                break
+        while i >= 0 and not flag:
+            flag = self._apply_knobs(self.default_knobs)
             i -= 1
-        if i == -1:
-            print("Failed too many times!")
-            exit(-10)
-        time.sleep(30)
+        if i < 0 and not flag:
+            print("[Env initializing failed]")
+            exit(-1)
+
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
         state = internal_metrics
@@ -471,7 +466,6 @@ class TencentServer(MySQLEnv):
             return True
 
         if status == 'undoed' or steps > max_steps:
-            self._set_params(knob=self.default_knobs)
             params = ''
             for key in knob.keys():
                 params += ' --%s=%s' % (key, knob[key])
