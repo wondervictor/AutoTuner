@@ -25,8 +25,8 @@ docker_config = {
 server_config = {
     'mysql1': {
         'instance_id': 'e1ecd360-3d3f-11e8-b828-70e2840ca2fd',
-        'host': '10.225.30.105',
-        'port': 9487,
+        'host': '100.119.17.24',
+        'port': 20149,
         'passwd': '123456',
         'user': 'root',
         'operator': 'zakijzhang'

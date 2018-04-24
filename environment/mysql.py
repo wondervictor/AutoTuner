@@ -16,6 +16,9 @@ import utils
 import knobs
 import requests
 
+
+# TEMP_FILES = "/data/AutoTuner/train_result/tmp/"
+# PROJECT_DIR = "/data/"
 TEMP_FILES = "/home/rmw/train_result/tmp/"
 PROJECT_DIR = "/home/rmw/"
 

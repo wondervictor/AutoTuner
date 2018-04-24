@@ -3,6 +3,39 @@
 > **Update**: 2018.4.20
 
 
+#### Configure
+
+1. 修改 `mysql.py` 文件路径
+
+````python
+
+# Tencent
+TEMP_FILES = "/data/AutoTuner/train_result/tmp/"
+PROJECT_DIR = "/data/"
+# Local
+TEMP_FILES = "/home/rmw/train_result/tmp/"
+PROJECT_DIR = "/home/rmw/"
+````
+
+2. 修改 `knobs.py`
+
+````python
+# TENCENT Mysql Instance Memory
+memory_size = 4 * 1024 * 1024 * 1024
+memory_size = utils.read_machine()
+# MB
+memory_size = memory_size / (1024*1024)
+````
+
+3. 修改 `run_sysbench.sh`
+
+````bash
+
+script_path="/home/rmw/sysbench-1.0/src/lua/"
+# script_path="/usr/share/sysbench/"
+````
+
+
 #### Train
 
 ````bash
