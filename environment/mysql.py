@@ -355,7 +355,10 @@ class TencentServer(MySQLEnv):
         print(response)
         if err != 0:
             raise Exception("SET UP FAILED: {}".format(err))
-        workid = response['workid']
+
+        # if restarting isn't needed, workid should be ''
+        workid = response.get('workid', '')
+
         return workid
 
     def _get_setup_state(self, workid):
@@ -452,15 +455,18 @@ class TencentServer(MySQLEnv):
             time.sleep(20)
             return True
 
+        print("Finished setting parameters..")
         steps = 0
         max_steps = 35
 
         status, progress = self._get_setup_state(workid=workid)
-
+        print("First request *query* status:{} progress:{}".format(status, progress))
         while status == 'running' and steps < max_steps:
             time.sleep(5)
             status, _ = self._get_setup_state(workid=workid)
             steps += 1
+        print("Out of Loop, status: {} loop step: {}".format(status, steps))
+
         if status == 'normal_finish':
             return True
 
@@ -474,4 +480,4 @@ class TencentServer(MySQLEnv):
                 f.write('{}.{}\n'.format(date_, params))
             return False
 
-        return True
+        return False

@@ -13,7 +13,7 @@ else
     run_script=${script_path}"oltp_read_write.lua"
 fi
 
-/usr/bin/sysbench ${run_script} \
+sysbench ${run_script} \
     --mysql-host=$2 \
 	--mysql-port=$3 \
 	--mysql-user=root \
