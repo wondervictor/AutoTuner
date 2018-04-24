@@ -248,7 +248,7 @@ class DDPG(object):
 
         target_next_actions = self.target_actor(batch_next_states)
         target_next_value = self.target_critic(batch_next_states, target_next_actions).detach().squeeze(1)
-        target_next_value.volatile = False
+
         current_value = self.critic(batch_states, batch_actions)
         next_value = batch_rewards + mask * target_next_value * self.gamma
         # Update Critic
