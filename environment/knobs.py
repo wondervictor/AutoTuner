@@ -45,6 +45,8 @@ KNOB_DETAILS = {
 
 }
 
+# TENCENT Mysql Instance Memory
+memory_size = 4 * 1024 * 1024 * 1024
 memory_size = utils.read_machine()
 # MB
 memory_size = memory_size / (1024*1024)

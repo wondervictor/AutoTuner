@@ -6,6 +6,7 @@ description: MySQL Environment
 import re
 import os
 import time
+import datetime
 import json
 import threading
 import MySQLdb
@@ -466,7 +467,8 @@ class TencentServer(MySQLEnv):
             for key in knob.keys():
                 params += ' --%s=%s' % (key, knob[key])
             with open('failed.log', 'a+') as f:
-                f.write('{}\n'.format(params))
+                date_ = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y-%m-%d %H:%M:%S")
+                f.write('{}.{}\n'.format(date_, params))
             return False
 
         return True
