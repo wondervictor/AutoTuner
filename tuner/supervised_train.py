@@ -23,6 +23,7 @@ parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL
 parser.add_argument('--sa_path', type=str, default='', help='state action dataset')
 parser.add_argument('--batch_size', type=int, default=64, help='training batch size')
 parser.add_argument('--epoches', type=int, default=20, help='training epoches')
+parser.add_argument('--workload', type=str, default='read', help='Workload type [`read`, `write`, `readwrite`]')
 
 opt = parser.parse_args()
 
@@ -50,11 +51,11 @@ if opt.phase == 'train':
     expr_name = 'sl_train_ddpg_{}'.format(str(utils.get_timestamp()))
 
     logger = utils.Logger(
-        name=opt.method,
+        name='ddpg',
         log_file='log/{}.log'.format(expr_name)
     )
 
-    assert len(opt.sa_path) == 0, "SA_PATH should be specified when training DDPG Actor"
+    assert len(opt.sa_path) != 0, "SA_PATH should be specified when training DDPG Actor"
 
     with open(opt.sa_path, 'rb') as f:
         data = pickle.load(f)
@@ -109,7 +110,7 @@ else:
         log_file='log/{}.log'.format(expr_name)
     )
 
-    assert len(opt.params) == 0, "Please add params' path"
+    assert len(opt.params) != 0, "Please add params' path"
 
     def generate_knob(action):
         return environment.gen_continuous(action)
@@ -122,7 +123,7 @@ else:
     max_value = 0.0
     generate_knobs = []
     current_state = env.initialize()
-    model.reset()
+    model.reset(0.01)
     while step_counter < 20:
         state = current_state
         action = model.choose_action(state)

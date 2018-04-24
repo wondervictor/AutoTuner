@@ -282,7 +282,7 @@ class DockerServer(MySQLEnv):
         )
 
         steps = 0
-        max_steps = 45
+        max_steps = 60
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
             time.sleep(5)
@@ -452,7 +452,7 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 35
+        max_steps = 60
 
         status, progress = self._get_setup_state(workid=workid)
         print("First request *query* status:{} progress:{}".format(status, progress))
