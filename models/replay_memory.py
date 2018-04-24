@@ -23,16 +23,14 @@ class ReplayMemory(object):
         self.position = 0
 
     def push(self, state, action, next_state, reward, terminate):
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = Transition(
+        self.memory.append(Transition(
             state=state,
             action=action,
             next_state=next_state,
             reward=reward,
             terminate=terminate
-        )
-        self.position = (self.position + 1) % self.capacity
+        ))
+        # self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
