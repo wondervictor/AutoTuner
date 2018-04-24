@@ -23,9 +23,11 @@ parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL
 parser.add_argument('--sa_path', type=str, default='', help='state action dataset')
 parser.add_argument('--batch_size', type=int, default=64, help='training batch size')
 parser.add_argument('--epoches', type=int, default=20, help='training epoches')
+parser.add_argument('--workload', type=str, default='read', help='Workload type [`read`, `write`, `readwrite`]')
+
 
 opt = parser.parse_args()
-
+print(opt)
 tconfig = tuner_configs.config
 ddpg_opt = dict()
 ddpg_opt['tau'] = 0.01
@@ -50,11 +52,11 @@ if opt.phase == 'train':
     expr_name = 'sl_train_ddpg_{}'.format(str(utils.get_timestamp()))
 
     logger = utils.Logger(
-        name=opt.method,
+        name="train",
         log_file='log/{}.log'.format(expr_name)
     )
 
-    assert len(opt.sa_path) == 0, "SA_PATH should be specified when training DDPG Actor"
+    assert len(opt.sa_path) != 0, "SA_PATH should be specified when training DDPG Actor"
 
     with open(opt.sa_path, 'rb') as f:
         data = pickle.load(f)
@@ -63,6 +65,7 @@ if opt.phase == 'train':
 
         random.shuffle(data)
         num_samples = len(data)
+        print(num_samples)
         n_train_samples = int(num_samples * 0.8)
         n_test_samples = num_samples - n_train_samples
         train_data = data[:n_train_samples]
@@ -73,8 +76,8 @@ if opt.phase == 'train':
         for i in xrange(n_train_samples/batch_size):
 
             batch_data = train_data[i*batch_size: (i+1)*batch_size]
-            batch_states = [x[0] for x in batch_data]
-            batch_actions = [x[1] for x in batch_data]
+            batch_states = [x[0].tolist() for x in batch_data]
+            batch_actions = [x[1].tolist() for x in batch_data]
 
             _loss += model.train_actor((batch_states, batch_actions), is_train=True)
 
@@ -84,12 +87,12 @@ if opt.phase == 'train':
         test_loss = 0
         for i in xrange(n_test_samples / batch_size):
             batch_data = test_data[i * batch_size: (i + 1) * batch_size]
-            batch_states = [x[0] for x in batch_data]
-            batch_actions = [x[1] for x in batch_data]
+            batch_states = [x[0].tolist() for x in batch_data]
+            batch_actions = [x[1].tolist() for x in batch_data]
 
             test_loss += model.train_actor((batch_states, batch_actions), is_train=False)
 
-        print("[Epoch {}] Test Loss: {}".format(epoch, test_loss/(n_test_samples / batch_size)))
+        print("[Epoch {}] Test Loss: {}".format(epoch, test_loss))
         model.save_actor('sl_model_params/sl_train_actor_{}.pth'.format(epoch))
 
 else:
@@ -105,11 +108,11 @@ else:
     expr_name = 'sl_test_ddpg_{}'.format(str(utils.get_timestamp()))
 
     logger = utils.Logger(
-        name=opt.method,
+        name='train_supervised',
         log_file='log/{}.log'.format(expr_name)
     )
 
-    assert len(opt.params) == 0, "Please add params' path"
+    assert len(opt.params) != 0, "Please add params' path"
 
     def generate_knob(action):
         return environment.gen_continuous(action)
@@ -122,7 +125,7 @@ else:
     max_value = 0.0
     generate_knobs = []
     current_state = env.initialize()
-    model.reset()
+    model.reset(0.01)
     while step_counter < 20:
         state = current_state
         action = model.choose_action(state)
