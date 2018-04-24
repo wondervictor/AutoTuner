@@ -380,7 +380,7 @@ class TencentServer(MySQLEnv):
         err = response['errno']
         progress = int(response['progress'])
         status = response['status']
-
+        print(response)
         if err != 0:
             raise Exception("GET STATE FAILED: {}".format(err))
 
@@ -443,6 +443,11 @@ class TencentServer(MySQLEnv):
             print("Failed too many times!")
             return False
 
+        # set parameters without restarting, sleep 20 seconds
+        if len(workid) == 0:
+            time.sleep(20)
+            return True
+
         steps = 0
         max_steps = 35
 
@@ -452,8 +457,10 @@ class TencentServer(MySQLEnv):
             time.sleep(5)
             status, _ = self._get_setup_state(workid=workid)
             steps += 1
+        if status == 'normal_finish':
+            return True
 
-        if status == 'running' or status == 'undoed':
+        if status == 'undoed' or steps > max_steps:
             self._set_params(knob=self.default_knobs)
             params = ''
             for key in knob.keys():
