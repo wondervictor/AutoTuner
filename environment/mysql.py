@@ -151,7 +151,7 @@ class MySQLEnv(object):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        return reward, next_state, terminate, self.score
+        return reward, next_state, terminate, self.score, external_metrics
 
     def _get_state(self):
         """Collect the Internal State and External State
@@ -249,13 +249,15 @@ class DockerServer(MySQLEnv):
         self.steps = 0
         self.terminate = False
 
-        utils.modify_configurations_by_start(
-            server_ip=self.server_ip,
-            instance_name=self.instance_name,
-            configuration=self.default_knobs
-        )
+        flag = self._apply_knobs(self.default_knobs)
+        i = 3
+        while i >= 0 and not flag:
+            flag = self._apply_knobs(self.default_knobs)
+            i -= 1
+        if i < 0 and not flag:
+            print("[Env initializing failed]")
+            exit(-1)
 
-        time.sleep(80)
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
         state = internal_metrics
@@ -264,7 +266,7 @@ class DockerServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized]")
+        print("[Env initialized][Metric tps: {} lat: {}]".format(external_metrics[0], external_metrics[1]))
         return state
 
     def _apply_knobs(self, knob):
@@ -301,8 +303,8 @@ class DockerServer(MySQLEnv):
             with open('failed.log', 'a+') as f:
                 f.write('{}\n'.format(params))
             return False
-
-        return True
+        else:
+            return True
 
 
 class TencentServer(MySQLEnv):
@@ -420,7 +422,7 @@ class TencentServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized]")
+        print("[Env initialized][Metric tps: {} lat: {}]".format(external_metrics[0], external_metrics[1]))
         return state
 
     def _apply_knobs(self, knob):

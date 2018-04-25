@@ -184,9 +184,9 @@ class DDPG(object):
             # Build Network
             self._build_network()
             print('Finish Initializing Networks')
-            self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
-            self.noise = OUProcess(n_actions)
-            print('DDPG Initialzed!')
+        self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
+        self.noise = OUProcess(n_actions)
+        print('DDPG Initialzed!')
 
     def _build_actor(self):
         self.actor = Actor(self.n_states, self.n_actions)

@@ -90,7 +90,7 @@ def generate_knob(action, method):
 origin_sigma = 0.15
 sigma = origin_sigma
 # decay rate
-sigma_decay_rate = 0.95
+sigma_decay_rate = 0.99
 step_counter = 0
 train_step = 0
 if opt.method == 'ddpg':
@@ -113,15 +113,15 @@ for episode in xrange(tconfig['epoches']):
         action = model.choose_action(state)
         if opt.method == 'ddpg':
             current_knob = generate_knob(action, 'ddpg')
-            logger.info("[ddpg] Action: {}".format(action))
+            # logger.info("[ddpg] Action: {}".format(action))
         else:
             action, qvalue = action
             current_knob = generate_knob(action, 'dqn')
-            logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
+            # logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
-        reward, state_, done, score = env.step(current_knob)
-        logger.info("[{}][Episode: {}][Step: {}] Reward: {} Score: {} Done: {}".format(
-            opt.method, episode, t, reward, score, done
+        reward, state_, done, score, metrics = env.step(current_knob)
+        logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{}]Reward: {} Score: {} Done: {}".format(
+            opt.method, episode, t, metrics[0], metrics[1], reward, score, done
         ))
 
         next_state = state_
