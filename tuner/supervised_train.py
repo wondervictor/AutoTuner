@@ -132,11 +132,10 @@ else:
         current_knob = generate_knob(action)
         logger.info("[ddpg] Action: {}".format(action))
 
-        reward, state_, done, score = env.step(current_knob)
-        logger.info("[{}][Step: {}] Reward: {} Score: {} Done: {}".format(
-            opt.method, step_counter, reward, score, done
+        reward, state_, done, score, metrics = env.step(current_knob)
+        logger.info("[Step: {}][Metric tps:{} lat:{}]Reward: {} Score: {} Done: {}".format(
+            step_counter, metrics[0], metrics[1], reward, score, done
         ))
-
         next_state = state_
 
         current_state = next_state
