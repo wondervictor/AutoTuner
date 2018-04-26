@@ -139,7 +139,7 @@ class MySQLEnv(object):
         """
         flag = self._apply_knobs(knob)
         if not flag:
-            return -100.0, np.array([0] * 63), True, self.score - 100
+            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0]
 
         external_metrics, internal_metrics = self._get_state()
         reward = self._get_reward(external_metrics)
