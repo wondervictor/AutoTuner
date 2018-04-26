@@ -153,7 +153,7 @@ print("Knobs are saved!")
 # eval
 
 default_konbs = environment.get_init_knobs()
-max_knobs = generate_knobs[max_step]
+max_knobs = generate_knobs[max_step][1]
 
 metric1 = env.eval(default_konbs)
 print("Default TPS: {} Latency: {}".format(metric1['tps'], metric1['latency']))
