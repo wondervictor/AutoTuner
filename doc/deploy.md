@@ -1,6 +1,6 @@
 ## Deployment
 
-> **Update**: 2018.4.20
+> **Update**: 2018.4.26
 
 
 #### Configure
@@ -19,6 +19,8 @@ PROJECT_DIR = "/home/rmw/"
 
 2. 修改 `knobs.py`
 
+* 修改memory读取
+
 ````python
 # TENCENT Mysql Instance Memory
 memory_size = 4 * 1024 * 1024 * 1024
@@ -26,6 +28,8 @@ memory_size = utils.read_machine()
 # MB
 memory_size = memory_size / (1024*1024)
 ````
+
+* 修改 `KNOB_DETAILS` 里的默认参数。
 
 3. 修改 `run_sysbench.sh`
 

@@ -120,8 +120,8 @@ for episode in xrange(tconfig['epoches']):
             # logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
-        logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{}]Reward: {} Score: {} Done: {}".format(
-            opt.method, episode, t, metrics[0], metrics[1], reward, score, done
+        logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
+            opt.method, episode, t, metrics[0], metrics[1], metrics[2], reward, score, done
         ))
 
         next_state = state_

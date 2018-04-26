@@ -92,12 +92,12 @@ class Actor(nn.Module):
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(128),
             nn.Linear(128, 128),
-            nn.LeakyReLU(negative_slope=0.2),
+            nn.Tanh(),
+            nn.Dropout(0.3),
             nn.Linear(128, 64),
-            nn.LeakyReLU(negative_slope=0.2),
+            nn.Tanh(),
             nn.BatchNorm1d(64),
             nn.Linear(64, n_actions),
-            nn.LeakyReLU(negative_slope=0.2)
         )
         self._init_weights()
         self.act = nn.Sigmoid()
@@ -106,7 +106,7 @@ class Actor(nn.Module):
 
         for m in self.layers:
             if type(m) == nn.Linear:
-                m.weight.data.normal_(0.0, 1e-3)
+                m.weight.data.normal_(0.0, 1e-2)
                 m.bias.data.uniform_(-0.1, 0.1)
 
     def forward(self, x):
@@ -121,29 +121,30 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         self.state_input = nn.Linear(n_states, 128)
         self.action_input = nn.Linear(n_actions, 128)
-        self.act = nn.LeakyReLU(negative_slope=0.2)
+        self.act = nn.Tanh()
         self.state_bn = nn.BatchNorm1d(n_states)
         self.layers = nn.Sequential(
             nn.Linear(256, 256),
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(256),
             nn.Linear(256, 64),
-            nn.LeakyReLU(negative_slope=0.2),
+            nn.Tanh(),
+            nn.Dropout(0.3),
             nn.BatchNorm1d(64),
             nn.Linear(64, 1),
         )
         self._init_weights()
 
     def _init_weights(self):
-        self.state_input.weight.data.normal_(0.0, 1e-3)
+        self.state_input.weight.data.normal_(0.0, 1e-2)
         self.state_input.bias.data.uniform_(-0.1, 0.1)
 
-        self.action_input.weight.data.normal_(0.0, 1e-3)
+        self.action_input.weight.data.normal_(0.0, 1e-2)
         self.action_input.bias.data.uniform_(-0.1, 0.1)
 
         for m in self.layers:
             if type(m) == nn.Linear:
-                m.weight.data.normal_(0.0, 1e-3)
+                m.weight.data.normal_(0.0, 1e-2)
                 m.bias.data.uniform_(-0.1, 0.1)
 
     def forward(self, x, action):
@@ -212,8 +213,8 @@ class DDPG(object):
         self._update_target(self.target_critic, self.critic, tau=1.0)
 
         self.loss_criterion = nn.MSELoss()
-        self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters())
-        self.critic_optimizer = optimizer.Adam(lr=self.clr, params=self.critic.parameters())
+        self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters(), weight_decay=1e-5)
+        self.critic_optimizer = optimizer.Adam(lr=self.clr, params=self.critic.parameters(), weight_decay=1e-5)
 
     @staticmethod
     def _update_target(target, source, tau):

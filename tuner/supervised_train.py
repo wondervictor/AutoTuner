@@ -31,8 +31,8 @@ print(opt)
 tconfig = tuner_configs.config
 ddpg_opt = dict()
 ddpg_opt['tau'] = 0.01
-ddpg_opt['alr'] = 0.001
-ddpg_opt['clr'] = 0.001
+ddpg_opt['alr'] = 0.0005
+ddpg_opt['clr'] = 0.0001
 ddpg_opt['model'] = opt.params
 ddpg_opt['gamma'] = ""
 ddpg_opt['batch_size'] = tconfig['batch_size']
@@ -133,8 +133,8 @@ else:
         logger.info("[ddpg] Action: {}".format(action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
-        logger.info("[Step: {}][Metric tps:{} lat:{}]Reward: {} Score: {} Done: {}".format(
-            step_counter, metrics[0], metrics[1], reward, score, done
+        logger.info("[Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
+            step_counter, metrics[0], metrics[1], metrics[2], reward, score, done
         ))
         next_state = state_
 

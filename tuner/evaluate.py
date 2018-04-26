@@ -102,8 +102,8 @@ while step_counter < 20:
         logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
     reward, state_, done, score, metrics = env.step(current_knob)
-    logger.info("[{}][Step: {}][Metric tps:{} lat:{}]Reward: {} Score: {} Done: {}".format(
-        opt.method, step_counter, metrics[0], metrics[1], reward, score, done
+    logger.info("[{}][Step: {}][Metric tps:{} lat:{}, qps: {}]Reward: {} Score: {} Done: {}".format(
+        opt.method, step_counter, metrics[0], metrics[1], metrics[2], reward, score, done
     ))
 
     next_state = state_

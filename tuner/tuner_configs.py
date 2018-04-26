@@ -8,7 +8,7 @@ config = {
     'num_states': 63,
     'use_gpu': False,
     'epsilon': 0.2,
-    'gamma': 0.95,
+    'gamma': 0.99,
     'update_target': 20,
     'epoches': 100,
     'batch_size': 128,

@@ -1,15 +1,15 @@
 ## Specs
 
-> **Update**:
+> **Update**: 2018.4.26
 
 ### Parameters Setting
 
-* gamma: discount, = 0.95
+* gamma: discount, = 0.99
 * batch_size: 128
-* update_target: 20 target网络更新频率
+* update_target: 10 target网络更新频率
 * DDPG的tau: 0.01
-* Actor Learning Rate: 0.0001
-* Critic Learning Rate: 0.001
+* Actor Learning Rate: 0.0005
+* Critic Learning Rate: 0.0001
 
 
 
@@ -37,40 +37,41 @@ else:
 ##### Actor 网络
 
 ```` python
-Actor (
-  (layers): Sequential (
-    (0): BatchNorm1d(63, eps=1e-05, momentum=0.1, affine=True)
-    (1): Linear (63 -> 128)
-    (2): LeakyReLU (0.2)
-    (3): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True)
-    (4): Linear (128 -> 128)
-    (5): LeakyReLU (0.2)
-    (6): Linear (128 -> 64)
-    (7): LeakyReLU (0.2)
-    (8): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True)
-    (9): Linear (64 -> 16)
-    (10): LeakyReLU (0.2)
+Actor(
+  (layers): Sequential(
+    (0): BatchNorm1d(63, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (1): Linear(in_features=63, out_features=128, bias=True)
+    (2): LeakyReLU(negative_slope=0.2)
+    (3): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (4): Linear(in_features=128, out_features=128, bias=True)
+    (5): Tanh()
+    (6): Dropout(p=0.3)
+    (7): Linear(in_features=128, out_features=64, bias=True)
+    (8): Tanh()
+    (9): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (10): Linear(in_features=64, out_features=16, bias=True)
   )
-  (act): Sigmoid ()
+  (act): Sigmoid()
 )
 ````
 
 ##### Critic 网络
 
 ```` python
-Critic (
-  (state_input): Linear (63 -> 128)
-  (action_input): Linear (16 -> 128)
-  (act): LeakyReLU (0.2)
-  (state_bn): BatchNorm1d(63, eps=1e-05, momentum=0.1, affine=True)
-  (layers): Sequential (
-    (0): Linear (256 -> 256)
-    (1): LeakyReLU (0.2)
-    (2): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True)
-    (3): Linear (256 -> 64)
-    (4): LeakyReLU (0.2)
-    (5): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True)
-    (6): Linear (64 -> 1)
+Critic(
+  (state_input): Linear(in_features=63, out_features=128, bias=True)
+  (action_input): Linear(in_features=16, out_features=128, bias=True)
+  (act): Tanh()
+  (state_bn): BatchNorm1d(63, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (layers): Sequential(
+    (0): Linear(in_features=256, out_features=256, bias=True)
+    (1): LeakyReLU(negative_slope=0.2)
+    (2): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (3): Linear(in_features=256, out_features=64, bias=True)
+    (4): Tanh()
+    (5): Dropout(p=0.3)
+    (6): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (7): Linear(in_features=64, out_features=1, bias=True)
   )
 )
 

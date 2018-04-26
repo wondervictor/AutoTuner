@@ -54,14 +54,17 @@ class MySQLEnv(object):
             temporal = temporal_pattern.findall(lines)
             tps = 0
             latency = 0
+            qps = 0
 
             for i in temporal[2:]:
                 tps += float(i[0])
                 latency += float(i[5])
+                qps += float(i[1])
             num_samples = len(temporal[2:])
             tps /= num_samples
+            qps /= num_samples
             latency /= num_samples
-            return [tps, latency]
+            return [tps, latency, qps]
 
         result = parse_sysbench_new(path)
 
@@ -139,7 +142,7 @@ class MySQLEnv(object):
         """
         flag = self._apply_knobs(knob)
         if not flag:
-            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0]
+            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0, 0]
 
         external_metrics, internal_metrics = self._get_state()
         reward = self._get_reward(external_metrics)
@@ -266,7 +269,8 @@ class DockerServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {}]".format(external_metrics[0], external_metrics[1]))
+        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
+            external_metrics[0], external_metrics[1], external_metrics[2]))
         return state
 
     def _apply_knobs(self, knob):
@@ -387,13 +391,12 @@ class TencentServer(MySQLEnv):
 
         response = json.loads(r.text)
         err = response['errno']
-        progress = int(response['progress'])
         status = response['status']
         print(response)
         if err != 0:
             raise Exception("GET STATE FAILED: {}".format(err))
 
-        return status, progress
+        return status
 
     def initialize(self):
         """ Initialize the environment when an episode starts
@@ -422,7 +425,8 @@ class TencentServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {}]".format(external_metrics[0], external_metrics[1]))
+        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
+            external_metrics[0], external_metrics[1], external_metrics[2]))
         return state
 
     def _apply_knobs(self, knob):
@@ -456,11 +460,11 @@ class TencentServer(MySQLEnv):
         steps = 0
         max_steps = 60
 
-        status, progress = self._get_setup_state(workid=workid)
+        status = self._get_setup_state(workid=workid)
         print("First request *query* status:{} progress:{}".format(status, progress))
         while status == 'running' and steps < max_steps:
             time.sleep(5)
-            status, _ = self._get_setup_state(workid=workid)
+            status = self._get_setup_state(workid=workid)
             steps += 1
         print("Out of Loop, status: {} loop step: {}".format(status, steps))
 

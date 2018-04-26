@@ -44,6 +44,7 @@ KNOB_DETAILS = {
     'binlog_format': ['enum', ['ROW', 'STATEMENT', 'MIXED'], None],
 
 }
+
 # TENCENT Mysql Instance Memory
 # memory_size = 4 * 1024 * 1024 * 1024
 memory_size = utils.read_machine()
@@ -195,7 +196,7 @@ def save_knobs(knob, metrics, knob_file):
     knob_strs = []
     for kv in knob.items():
         knob_strs.append('{}:{}'.format(kv[0], kv[1]))
-    result_str = '{},{},'.format(metrics[0], metrics[1])
+    result_str = '{},{},{},'.format(metrics[0], metrics[1], metrics[2])
     knob_str = "#".join(knob_strs)
     result_str += knob_str
 
