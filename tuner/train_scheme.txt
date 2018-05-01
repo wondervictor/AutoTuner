@@ -1,0 +1,3 @@
+train_ddpg_1524793191.log: mysql2
+train_ddpg_1524807971.log: mysql1
+

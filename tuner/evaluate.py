@@ -38,10 +38,10 @@ if opt.method == 'ddpg':
     ddpg_opt = dict()
     ddpg_opt['tau'] = 0.001
     ddpg_opt['alr'] = 0.0001
-    ddpg_opt['clr'] = 0.001
+    ddpg_opt['clr'] = 0.0001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
-    ddpg_opt['batch_size'] = tconfig['batch_size']
+    ddpg_opt['batch_size'] = 4 # tconfig['batch_size']
     ddpg_opt['memory_size'] = tconfig['memory_size']
 
     model = models.DDPG(n_states=tconfig['num_states'], n_actions=tconfig['num_actions'], opt=ddpg_opt)
@@ -122,7 +122,7 @@ while step_counter < 20:
     if max_value < score:
         max_step = step_counter-1
         max_value = score
-    if len(model.replay_memory) > 2 * tconfig['batch_size']:
+    if len(model.replay_memory) >= tconfig['batch_size']:
         losses = []
         for i in xrange(2):
             losses.append(model.update())

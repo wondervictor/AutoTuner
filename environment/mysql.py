@@ -211,14 +211,14 @@ class MySQLEnv(object):
             else:
                 reward -= latency
 
-        reward *= self.alpha
+        #reward *= 5.0
 
         self.score += reward
 
-        if self.score < -0.5:
-            self.terminate = True
-            reward = -10.0
-            self.score = -10.0
+        #if self.score < -1.0:
+        #    self.terminate = True
+        #    reward = -10.0
+        #    self.score = -10.0
 
         return reward
 
