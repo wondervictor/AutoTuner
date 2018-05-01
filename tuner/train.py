@@ -36,8 +36,8 @@ tconfig = tuner_configs.config
 if opt.method == 'ddpg':
 
     ddpg_opt = dict()
-    ddpg_opt['tau'] = 0.001
-    ddpg_opt['alr'] = 0.0001
+    ddpg_opt['tau'] = 0.002
+    ddpg_opt['alr'] = 0.005
     ddpg_opt['clr'] = 0.001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
@@ -87,7 +87,7 @@ def generate_knob(action, method):
 
 
 # OUProcess
-origin_sigma = 0.15
+origin_sigma = 0.30
 sigma = origin_sigma
 # decay rate
 sigma_decay_rate = 0.99
@@ -113,11 +113,11 @@ for episode in xrange(tconfig['epoches']):
         action = model.choose_action(state)
         if opt.method == 'ddpg':
             current_knob = generate_knob(action, 'ddpg')
-            # logger.info("[ddpg] Action: {}".format(action))
+            logger.info("[ddpg] Action: {}".format(action))
         else:
             action, qvalue = action
             current_knob = generate_knob(action, 'dqn')
-            # logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
+            logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
         logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
@@ -151,12 +151,12 @@ for episode in xrange(tconfig['epoches']):
                 accumulate_loss[0] += sum([x[0] for x in losses])
                 accumulate_loss[1] += sum([x[1] for x in losses])
                 logger.info('[{}][Episode: {}][Step: {}] Critic: {} Actor: {}'.format(
-                    opt.method, episode, t, accumulate_loss[0]/train_step, accumulate_loss[1]/train_step
+                    opt.method, episode, t-1, accumulate_loss[0]/train_step, accumulate_loss[1]/train_step
                 ))
             else:
                 accumulate_loss += sum(losses)
                 logger.info('[{}][Episode: {}][Step: {}] Loss: {}'.format(
-                    opt.method, episode, t, accumulate_loss/train_step
+                    opt.method, episode, t-1, accumulate_loss/train_step
                 ))
 
         # save replay memory
