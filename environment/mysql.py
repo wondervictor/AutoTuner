@@ -373,7 +373,6 @@ class TencentServer(MySQLEnv):
             workid: str, point to the setting process
         Return:
             status: str, setup status (running, undoed)
-            progress: str, setup progress
         Raises:
             Exception: get state failed
         """
@@ -461,7 +460,6 @@ class TencentServer(MySQLEnv):
         max_steps = 60
 
         status = self._get_setup_state(workid=workid)
-        print("First request *query* status:{} progress:{}".format(status, progress))
         while status == 'running' and steps < max_steps:
             time.sleep(5)
             status = self._get_setup_state(workid=workid)

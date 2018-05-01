@@ -5,9 +5,11 @@ Replay Memory Utils
 """
 
 import os
+import sys
 import argparse
 import numpy as np
 import pickle
+sys.path.append('../')
 
 
 def aggravate_memories(mem_dir, save_path):
