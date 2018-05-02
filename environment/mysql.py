@@ -33,6 +33,7 @@ class MySQLEnv(object):
         self.steps = 0
         self.terminate = False
         self.last_external_metrics = None
+        self.default_externam_metrics = None
 
         self.alpha = alpha
         self.beta1 = beta1
@@ -186,6 +187,15 @@ class MySQLEnv(object):
         """
         pass
 
+    @staticmethod
+    def _calculate_reward(delta0, deltat):
+
+        if delta0 > 0:
+            _reward = (1+delta0)**2 * (1+deltat)
+        else:
+            _reward = - (1-delta0)**2 * (1-deltat)
+        return _reward
+
     def _get_reward(self, external_metrics):
         """
         Args:
@@ -193,32 +203,20 @@ class MySQLEnv(object):
         Return:
             reward: float, a scalar reward
         """
-        if self.last_external_metrics is None \
-                or self.last_external_metrics[0] == 0 \
-                or self.last_external_metrics[1] == 0:
-            reward = 0.01
-        else:
-            tps = (external_metrics[0] - self.last_external_metrics[0])/self.last_external_metrics[0]
-            latency = (external_metrics[1] - self.last_external_metrics[1])/self.last_external_metrics[1]
 
-            reward = 0  # tps - latency
-            if tps < 0:
-                reward += 2 * tps
-            else:
-                reward += tps
-            if latency > 0:
-                reward -= 2 * latency
-            else:
-                reward -= latency
+        # tps
+        delta_0_tps = float((external_metrics[0] - self.default_externam_metrics[0]))/self.default_externam_metrics[0]
+        delta_t_tps = float((external_metrics[0] - self.last_external_metrics[0]))/self.last_external_metrics[0]
 
-        #reward *= 5.0
+        tps_reward = self._calculate_reward(delta_0_tps, delta_t_tps)
 
-        self.score += reward
+        # latency
+        delta_0_lat = float((-external_metrics[1] + self.default_externam_metrics[1])) / self.default_externam_metrics[1]
+        delta_t_lat = float((-external_metrics[1] + self.last_external_metrics[1])) / self.last_external_metrics[1]
 
-        #if self.score < -1.0:
-        #    self.terminate = True
-        #    reward = -10.0
-        #    self.score = -10.0
+        lat_reward = self._calculate_reward(delta_0_lat, delta_t_lat)
+
+        reward = tps_reward * 0.4 + 0.6 * lat_reward
 
         return reward
 

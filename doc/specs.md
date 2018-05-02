@@ -1,15 +1,15 @@
 ## Specs
 
-> **Update**: 2018.4.26
+> **Update**: 2018.5.1
 
 ### Parameters Setting
 
 * gamma: discount, = 0.99
 * batch_size: 128
 * update_target: 10 target网络更新频率
-* DDPG的tau: 0.01
-* Actor Learning Rate: 0.0005
-* Critic Learning Rate: 0.0001
+* DDPG的tau: 0.001
+* Actor Learning Rate: 0.005
+* Critic Learning Rate: 0.001
 
 
 
@@ -17,7 +17,7 @@
 
 ##### Reward 函数设计
 
-* 简化版
+* Version 0.1 简化版
 
 ```` python
 tps = 并发提高百分比
@@ -32,6 +32,34 @@ if latency > 0:
     reward -= 2 * latency
 else:
     reward -= latency
+````
+
+* Version 0.2
+
+```` python
+
+def _calculate_reward(delta0, deltat):
+
+    if delta0 > 0:
+        _reward = (1+delta0)**2 * (1+deltat)
+    else:
+        _reward = - (1-delta0)**2 * (1-deltat)
+    return _reward
+
+# tps
+delta_0_tps = float((external_metrics[0] - self.default_externam_metrics[0]))/self.default_externam_metrics[0]
+delta_t_tps = float((external_metrics[0] - self.last_external_metrics[0]))/self.last_external_metrics[0]
+
+tps_reward = self._calculate_reward(delta_0_tps, delta_t_tps)
+
+# latency 
+delta_0_lat = float((-external_metrics[1] + self.default_externam_metrics[1])) / self.default_externam_metrics[1]
+delta_t_lat = float((-external_metrics[1] + self.last_external_metrics[1])) / self.last_external_metrics[1]
+
+lat_reward = self._calculate_reward(delta_0_lat, delta_t_lat)
+
+reward = tps_reward * 0.4 + 0.6 * lat_reward
+
 ````
 
 ##### Actor 网络
