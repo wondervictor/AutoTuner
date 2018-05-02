@@ -5,6 +5,8 @@ Deep Deterministic Policy Gradient Model
 """
 
 import torch
+import pickle
+import numpy as np
 import torch.nn as nn
 import torch.optim as optimizer
 from torch.autograd import Variable
@@ -13,8 +15,26 @@ from OUProcess import OUProcess
 from replay_memory import ReplayMemory
 
 
-def totensor(x):
-    return Variable(torch.FloatTensor(x))
+class Normalizer(object):
+
+    def __init__(self, mean, variance):
+        if isinstance(mean, list):
+            mean = np.array(mean)
+        if isinstance(variance, list):
+            variance = np.array(variance)
+        self.mean = mean
+        self.std = np.sqrt(variance+0.00001)
+
+    def normalize(self, x):
+        if isinstance(x, list):
+            x = np.array(x)
+        x = x - self.mean
+        x = x / self.std
+
+        return Variable(torch.FloatTensor(x))
+
+    def __call__(self, x, *args, **kwargs):
+        return self.normalize(x)
 
 
 class ActorLow(nn.Module):
@@ -159,7 +179,7 @@ class Critic(nn.Module):
 
 class DDPG(object):
 
-    def __init__(self, n_states, n_actions, opt, supervised=False):
+    def __init__(self, n_states, n_actions, opt, mean_var_path=None, supervised=False):
         """ DDPG Algorithms
         Args:
             n_states: int, dimension of states
@@ -177,6 +197,14 @@ class DDPG(object):
         self.batch_size = opt['batch_size']
         self.gamma = opt['gamma']
         self.tau = opt['tau']
+        if mean_var_path is None:
+            mean = np.zeros(n_states)
+            var = np.zeros(n_states)
+        else:
+            with open(mean_var_path, 'rb') as f:
+                mean, var = pickle.load(f)
+
+        self.normalizer = Normalizer(mean, var)
 
         if supervised:
             self._build_actor()
@@ -188,6 +216,10 @@ class DDPG(object):
         self.replay_memory = ReplayMemory(capacity=opt['memory_size'])
         self.noise = OUProcess(n_actions)
         print('DDPG Initialzed!')
+
+    @staticmethod
+    def totensor(x):
+        return Variable(torch.FloatTensor(x))
 
     def _build_actor(self):
         self.actor = Actor(self.n_states, self.n_actions)
@@ -240,12 +272,12 @@ class DDPG(object):
         """ Update the Actor and Critic with a batch data
         """
         states, next_states, actions, rewards, terminates = self._sample_batch()
-        batch_states = totensor(states)
-        batch_next_states = Variable(torch.FloatTensor(next_states))
-        batch_actions = totensor(actions)
-        batch_rewards = totensor(rewards)
+        batch_states = self.normalizer(states)# totensor(states)
+        batch_next_states = self.normalizer(next_states)# Variable(torch.FloatTensor(next_states))
+        batch_actions = self.totensor(actions)
+        batch_rewards = self.totensor(rewards)
         mask = [0 if x else 1 for x in terminates]
-        mask = totensor(mask)
+        mask = self.totensor(mask)
 
         target_next_actions = self.target_actor(batch_next_states).detach()
         target_next_value = self.target_critic(batch_next_states, target_next_actions).detach().squeeze(1)
@@ -279,7 +311,7 @@ class DDPG(object):
             x: np.array, current state
         """
         self.actor.eval()
-        act = self.actor(totensor([x.tolist()])).squeeze(0)
+        act = self.actor(self.normalizer([x.tolist()])).squeeze(0)
         self.actor.train()
         action = act.data.numpy()
 
@@ -345,8 +377,8 @@ class DDPG(object):
 
         if is_train:
             self.actor.train()
-            pred = self.actor(totensor(states))
-            action = totensor(action)
+            pred = self.actor(self.normalizer(states))
+            action = self.totensor(action)
 
             _loss = self.actor_criterion(pred, action)
 
@@ -356,8 +388,8 @@ class DDPG(object):
 
         else:
             self.actor.eval()
-            pred = self.actor(totensor(states))
-            action = totensor(action)
+            pred = self.actor(self.normalizer(states))
+            action = self.totensor(action)
             _loss = self.actor_criterion(pred, action)
 
         return _loss.data[0]

@@ -44,7 +44,12 @@ if opt.method == 'ddpg':
     ddpg_opt['batch_size'] = tconfig['batch_size']
     ddpg_opt['memory_size'] = tconfig['memory_size']
 
-    model = models.DDPG(n_states=tconfig['num_states'], n_actions=tconfig['num_actions'], opt=ddpg_opt)
+    model = models.DDPG(
+        n_states=tconfig['num_states'],
+        n_actions=tconfig['num_actions'],
+        opt=ddpg_opt,
+        mean_var_path='mean_var.pkl')
+    
 else:
 
     model = models.DQN()
@@ -72,9 +77,9 @@ logger = utils.Logger(
     log_file='log/{}.log'.format(expr_name)
 )
 
-# Load mean value and variance
-with open('mean_var.pkl', 'rb') as f:
-    mean, var = pickle.load(f)
+# # Load mean value and variance
+# with open('mean_var.pkl', 'rb') as f:
+#     mean, var = pickle.load(f)
 
 current_knob = environment.get_init_knobs()
 
