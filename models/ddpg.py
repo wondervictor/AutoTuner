@@ -110,7 +110,6 @@ class Actor(nn.Module):
     def __init__(self, n_states, n_actions, ):
         super(Actor, self).__init__()
         self.layers = nn.Sequential(
-            nn.BatchNorm1d(n_states),
             nn.Linear(n_states, 128),
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(128),
@@ -145,7 +144,6 @@ class Critic(nn.Module):
         self.state_input = nn.Linear(n_states, 128)
         self.action_input = nn.Linear(n_actions, 128)
         self.act = nn.Tanh()
-        self.state_bn = nn.BatchNorm1d(n_states)
         self.layers = nn.Sequential(
             nn.Linear(256, 256),
             nn.LeakyReLU(negative_slope=0.2),
@@ -171,7 +169,6 @@ class Critic(nn.Module):
                 m.bias.data.uniform_(-0.1, 0.1)
 
     def forward(self, x, action):
-        x = self.state_bn(x)
         x = self.act(self.state_input(x))
         action = self.act(self.action_input(action))
 
