@@ -24,34 +24,36 @@ KNOBS = ['skip_name_resolve',
          'binlog_format'
          ]
 
-KNOB_DETAILS = {
-    'skip_name_resolve': ['enum', ['OFF', 'ON'], None],
-    'table_open_cache': ['integer', [1, 524288, 2000], None],
-    'max_connections': ['integer', [1, 100000, 151], None],
-    'innodb_buffer_pool_size': ['integer', [1, 34359738368, 17179869184], None],
-    # WARN: innodb_buffer_pool_size 80% of memory
-    'innodb_buffer_pool_instances': ['integer', [1, 64, 8], None],
-    'innodb_log_files_in_group': ['integer', [2, 100, 2], None],
-    'innodb_log_file_size': ['integer', [1048576, 5497558138, 50331648], ['innodb_log_files_in_group']],
-    'innodb_purge_threads': ['integer', [1, 32, 1], None],
-    'innodb_read_io_threads': ['integer', [1, 64, 4], None],
-    'innodb_write_io_threads': ['integer', [1, 64, 4], None],
-    'innodb_file_per_table': ['enum', ['OFF', 'ON'], None],
-    'binlog_checksum': ['enum', ['NONE', 'CRC32'], None],
-    'binlog_cache_size': ['integer', [4096, 34359738368, 32768], None],
-    'max_binlog_cache_size': ['integer', [4096, 18446744073709551615, 18446744073709551615], None],
-    'max_binlog_size': ['integer', [4096, 1073741824, 1073741824], None],
-    'binlog_format': ['enum', ['ROW', 'STATEMENT', 'MIXED'], None],
-
-}
-
 # TENCENT Mysql Instance Memory
 # memory_size = 4 * 1024 * 1024 * 1024
+# KB
 memory_size = utils.read_machine()
+
 # MB
 memory_size = memory_size / (1024*1024)
 
 print("Machine Memory: {} MiB".format(memory_size))
+
+KNOB_DETAILS = {
+    'skip_name_resolve': ['enum', ['ON', 'OFF'], None],
+    'table_open_cache': ['integer', [1, 524288, 65536], None],
+    'max_connections': ['integer', [1, 100000, 8500], None],
+    'innodb_buffer_pool_size': ['integer', [1, memory_size, memory_size], None],
+    # WARN: innodb_buffer_pool_size 80% of memory
+    'innodb_buffer_pool_instances': ['integer', [1, 64, 8], None],
+    'innodb_log_files_in_group': ['integer', [2, 100, 4], None],
+    'innodb_log_file_size': ['integer', [1048576, 5497558138, 50331648], ['innodb_log_files_in_group']],
+    'innodb_purge_threads': ['integer', [1, 32, 4], None],
+    'innodb_read_io_threads': ['integer', [1, 64, 8], None],
+    'innodb_write_io_threads': ['integer', [1, 64, 8], None],
+    'innodb_file_per_table': ['enum', ['OFF', 'ON'], None],
+    'binlog_checksum': ['enum', ['NONE', 'CRC32'], None],
+    'binlog_cache_size': ['integer', [4096, 34359738368, 32*1024], None],
+    'max_binlog_cache_size': ['integer', [4096, 18446744073709551615, 2*1024*1024*1024], None],
+    'max_binlog_size': ['integer', [4096, 1073741824, 500*1024*1024], None],
+    'binlog_format': ['enum', ['ROW', 'MIXED'], None],
+
+}
 
 UNIFIED_KNOBS = {
     'skip_name_resolve': ['enum', ['OFF', 'ON'], None],
@@ -151,6 +153,8 @@ def gen_discrete(action, knobs):
                 val = enums[current_index]
 
         result[name] = val
+        result['gtid_mode'] = 'ON'
+        result['enforce_gtid_consistency'] = 'ON'
 
     return result
 
