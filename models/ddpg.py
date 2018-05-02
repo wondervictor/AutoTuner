@@ -31,6 +31,9 @@ class Normalizer(object):
         x = x - self.mean
         x = x / self.std
 
+        print("---------------------output from model.ddpg.Normalize---------------------------")
+        print("Normalized: \n%s" % x)
+        print("--------------------------------------------------------------------------------")
         return Variable(torch.FloatTensor(x))
 
     def __call__(self, x, *args, **kwargs):
@@ -297,6 +300,7 @@ class DDPG(object):
         policy_loss = policy_loss.mean()
         self.actor_optimizer.zero_grad()
         policy_loss.backward()
+
         self.actor_optimizer.step()
         self.critic.train()
 

@@ -43,6 +43,9 @@ def get_metrics(config):
     cmd = 'SELECT * from information_schema.INNODB_METRICS where status="enabled" ORDER BY NAME'
     cursor.execute(cmd)
     data = cursor.fetchall()
+    print("----------------output from environment.utils.get_metrics-----------------------")
+    print(data)
+    print("--------------------------------------------------------------------------------")
 
     def extract_info(line):
         return line[0], line[2]

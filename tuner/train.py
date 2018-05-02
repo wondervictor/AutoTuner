@@ -26,7 +26,7 @@ opt = parser.parse_args()
 
 # Create Environment
 if opt.tencent:
-    env = environment.TencentServer(wk_type=opt.workload,instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
+    env = environment.TencentServer(wk_type=opt.workload, instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
 else:
     env = environment.DockerServer(wk_type=opt.workload, instance_name=opt.instance)
 
@@ -49,7 +49,7 @@ if opt.method == 'ddpg':
         n_actions=tconfig['num_actions'],
         opt=ddpg_opt,
         mean_var_path='mean_var.pkl')
-    
+
 else:
 
     model = models.DQN()
@@ -111,6 +111,7 @@ if len(opt.memory) > 0:
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
+    print("[Initial State]\n%s"%current_state)
     model.reset(sigma)
     t = 0
     while True:
@@ -125,6 +126,7 @@ for episode in xrange(tconfig['epoches']):
             logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
+        print("[Next State]\n%s" % state_)
         logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
             opt.method, episode, t, metrics[0], metrics[1], metrics[2], reward, score, done
         ))
@@ -146,7 +148,7 @@ for episode in xrange(tconfig['epoches']):
         t = t + 1
         step_counter += 1
 
-        if len(model.replay_memory) > 2 * tconfig['batch_size']:
+        if len(model.replay_memory) > tconfig['batch_size']:
             losses = []
             for i in xrange(2):
                 losses.append(model.update())
