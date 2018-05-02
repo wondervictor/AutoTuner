@@ -217,7 +217,7 @@ class MySQLEnv(object):
         lat_reward = self._calculate_reward(delta_0_lat, delta_t_lat)
 
         reward = tps_reward * 0.4 + 0.6 * lat_reward
-
+        self.score += reward
         return reward
 
     def _terminate(self):
