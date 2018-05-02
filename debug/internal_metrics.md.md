@@ -108,3 +108,74 @@
   -1.89994775]]
 
 ````
+
+
+## Internal Metric 信息
+
+|            Name                  |     Type     |     Value    |
+|----------------------------------|--------------|--------------|
+| adaptive_hash_searches           |status_counter|0.00000000e+00|
+| adaptive_hash_searches_btree     |status_counter|x|
+| buffer_data_reads                |status_counter|x|
+| buffer_data_written              |status_counter|x|
+| buffer_pages_created             |status_counter|0.00000000e+00|
+| buffer_pages_read                |status_counter|x|
+| buffer_pages_written             |status_counter|x|
+| buffer_pool_bytes_data           |     value    |x|
+| buffer_pool_bytes_dirty          |     value    |x|
+| buffer_pool_pages_data           |     value    |x|
+| buffer_pool_pages_dirty          |     value    |x|
+| buffer_pool_pages_free           |     value    |x|
+| buffer_pool_pages_misc           |     value    |1.00000000e+00|
+| buffer_pool_pages_total          |     value    |x|
+| buffer_pool_reads                |status_counter|0.00000000e+00|
+| buffer_pool_read_ahead           |status_counter|0.00000000e+00|
+| buffer_pool_read_ahead_evicted   |status_counter|x|
+| buffer_pool_read_requests        |status_counter|x|
+| buffer_pool_size                 |     value    |x|
+| buffer_pool_wait_free            |status_counter|0.00000000e+00|
+| buffer_pool_write_requests       |status_counter|x|
+| dml_deletes                      |status_counter|0.00000000e+00|
+| dml_inserts                      |status_counter|0.00000000e+00|
+| dml_reads                        |status_counter|x|
+| dml_updates                      |status_counter|0.00000000e+00|
+| file_num_open_files              |     value    |x|
+| ibuf_merges                      |status_counter|0.00000000e+00|
+| ibuf_merges_delete               |status_counter|0.00000000e+00|
+| ibuf_merges_delete_mark          |status_counter|0.00000000e+00|
+| ibuf_merges_discard_delete       |status_counter|0.00000000e+00|
+| ibuf_merges_discard_delete_mark  |status_counter|0.00000000e+00|
+| ibuf_merges_discard_insert       |status_counter|0.00000000e+00|
+| ibuf_merges_insert               |status_counter|0.00000000e+00|
+| ibuf_size                        |status_counter|0.00000000e+00|
+| innodb_activity_count            |status_counter|0.00000000e+00|
+| innodb_dblwr_pages_written       |status_counter|xx|
+| innodb_dblwr_writes              |status_counter|xx|
+| innodb_page_size                 |status_counter|1.63840000e+04|
+| innodb_rwlock_s_os_waits         |status_counter|x|
+| innodb_rwlock_s_spin_rounds      |status_counter|x|
+| innodb_rwlock_s_spin_waits       |status_counter|x|
+| innodb_rwlock_x_os_waits         |status_counter|xx|
+| innodb_rwlock_x_spin_rounds      |status_counter|x|
+| innodb_rwlock_x_spin_waits       |status_counter|0.00000000e+00|
+| lock_deadlocks                   |    counter   |0.00000000e+00|
+| lock_row_lock_current_waits      |status_counter|0.00000000e+00|
+| lock_row_lock_time               |status_counter|0.00000000e+00|
+| lock_row_lock_time_avg           |     value    |0.00000000e+00|
+| lock_row_lock_time_max           |     value    |0.00000000e+00|
+| lock_row_lock_waits              |status_counter|0.00000000e+00|
+| lock_timeouts                    |    counter   |0.00000000e+00|
+| log_waits                        |status_counter|0.00000000e+00|
+| log_writes                       |status_counter|8.00000000e+00|
+| log_write_requests               |status_counter|xx|
+| metadata_mem_pool_size           |     value    |0.00000000e+00|
+| os_data_fsyncs                   |status_counter|xx|
+| os_data_reads                    |status_counter|x|
+| os_data_writes                   |status_counter|x|
+| os_log_bytes_written             |status_counter|xx|
+| os_log_fsyncs                    |status_counter|x|
+| os_log_pending_fsyncs            |status_counter|0.00000000e+00|
+| os_log_pending_writes            |status_counter|0.00000000e+00|
+| trx_rseg_history_len             |     value    |5.32000000e+02|
+
+
