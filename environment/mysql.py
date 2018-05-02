@@ -261,6 +261,7 @@ class DockerServer(MySQLEnv):
 
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
+        self.default_externam_metrics = external_metrics
         state = internal_metrics
         knobs.save_knobs(
             self.default_knobs,
@@ -416,6 +417,8 @@ class TencentServer(MySQLEnv):
 
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
+        self.default_externam_metrics = external_metrics
+
         state = internal_metrics
         knobs.save_knobs(
             self.default_knobs,
