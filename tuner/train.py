@@ -111,7 +111,6 @@ if len(opt.memory) > 0:
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
-    print("[Initial State]\n%s" % current_state)
     model.reset(sigma)
     t = 0
     while True:
@@ -126,7 +125,6 @@ for episode in xrange(tconfig['epoches']):
             logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
-        print("[Next State]\n%s" % state_)
         logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
             opt.method, episode, t, metrics[0], metrics[1], metrics[2], reward, score, done
         ))

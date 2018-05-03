@@ -11,11 +11,7 @@ config = {
     'gamma': 0.99,
     'update_target': 20,
     'epoches': 100,
-<<<<<<< HEAD
-    'batch_size': 1,
-=======
     'batch_size': 4,
->>>>>>> edcfdc8987b35b271a78568a9441da099e36c9f9
     'learning_rate': 0.001,
     'memory_size': 100000,
 }
