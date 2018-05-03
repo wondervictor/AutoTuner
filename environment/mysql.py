@@ -191,9 +191,9 @@ class MySQLEnv(object):
     def _calculate_reward(delta0, deltat):
 
         if delta0 > 0:
-            _reward = (1+delta0)**2 * (1+deltat)
+            _reward = ((1+delta0)**2-1) * (1+deltat)
         else:
-            _reward = - (1-delta0)**2 * (1-deltat)
+            _reward = - ((1-delta0)**2-1) * (1-deltat)
         return _reward
 
     def _get_reward(self, external_metrics):
