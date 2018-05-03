@@ -31,9 +31,6 @@ class Normalizer(object):
         x = x - self.mean
         x = x / self.std
 
-        print("---------------------output from model.ddpg.Normalize---------------------------")
-        print("Normalized: \n%s" % x)
-        print("--------------------------------------------------------------------------------")
         return Variable(torch.FloatTensor(x))
 
     def __call__(self, x, *args, **kwargs):
