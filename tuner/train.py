@@ -111,7 +111,7 @@ if len(opt.memory) > 0:
 
 for episode in xrange(tconfig['epoches']):
     current_state = env.initialize()
-    print("[Initial State]\n%s"%current_state)
+    print("[Initial State]\n%s" % current_state)
     model.reset(sigma)
     t = 0
     while True:

@@ -131,7 +131,7 @@
 | buffer_pool_pages_data           |     value    |x|
 | buffer_pool_pages_dirty          |     value    |x|
 | buffer_pool_pages_free           |     value    |x|
-| buffer_pool_pages_misc           |     value    |1.00000000e+00|
+| buffer_pool_pages_misc           |     value    |x|
 | buffer_pool_pages_total          |     value    |x|
 | buffer_pool_reads                |status_counter|0.00000000e+00|
 | buffer_pool_read_ahead           |status_counter|0.00000000e+00|
@@ -156,7 +156,7 @@
 | innodb_activity_count            |status_counter|x (write)|
 | innodb_dblwr_pages_written       |status_counter|xx|
 | innodb_dblwr_writes              |status_counter|xx|
-| innodb_page_size                 |status_counter|1.63840000e+04|
+| innodb_page_size                 |status_counter|x|
 | innodb_rwlock_s_os_waits         |status_counter|x|
 | innodb_rwlock_s_spin_rounds      |status_counter|x|
 | innodb_rwlock_s_spin_waits       |status_counter|x|
@@ -170,10 +170,10 @@
 | lock_row_lock_time_max           |     value    |0.00000000e+00|
 | lock_row_lock_waits              |status_counter|x (write)|
 | lock_timeouts                    |    counter   |0.00000000e+00|
-| log_waits                        |status_counter|0.00000000e+00|
-| log_writes                       |status_counter|8.00000000e+00|
+| log_waits                        |status_counter|x|
+| log_writes                       |status_counter|x|
 | log_write_requests               |status_counter|xx|
-| metadata_mem_pool_size           |     value    |0.00000000e+00|
+| metadata_mem_pool_size           |     value    |x|
 | os_data_fsyncs                   |status_counter|xx|
 | os_data_reads                    |status_counter|x|
 | os_data_writes                   |status_counter|x|

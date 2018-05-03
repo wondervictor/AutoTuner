@@ -32,14 +32,20 @@ def aggravate_memories(mem_dir, save_path):
     print("Memory in {} have been arrgravated in {}".format(mem_dir, save_path))
 
 
-def calculate_stats(mem_path, save_path):
+def calculate_stats(mem_dir, save_path):
     """ calculate the statistics of the memory, including mean and var
     Args:
-        mem_path: str, memory file path
+        mem_dir: str, memory file path
         save_path: str, memory path of the dest memory file
     """
-    with open(mem_path, 'rb') as f:
-        data = pickle.load(f)
+    files = os.listdir(mem_dir)
+    data = []
+    for fi in files:
+        if os.path.isdir(fi):
+            continue
+
+        with open(os.path.join(mem_dir, fi), 'rb') as f:
+            data += pickle.load(f)
 
     states = []
     states += [x.state for x in data]

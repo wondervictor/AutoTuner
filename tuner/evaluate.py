@@ -44,7 +44,12 @@ if opt.method == 'ddpg':
     ddpg_opt['batch_size'] = 4 # tconfig['batch_size']
     ddpg_opt['memory_size'] = tconfig['memory_size']
 
-    model = models.DDPG(n_states=tconfig['num_states'], n_actions=tconfig['num_actions'], opt=ddpg_opt)
+    model = models.DDPG(
+        n_states=tconfig['num_states'],
+        n_actions=tconfig['num_actions'],
+        opt=ddpg_opt,
+        mean_var_path='mean_var.pkl')
+
 else:
 
     model = models.DQN()
@@ -78,6 +83,7 @@ def generate_knob(action, method):
 if len(opt.memory) > 0:
     model.replay_memory.load_memory(opt.memory)
     print("Load Memory: {}".format(len(model.replay_memory)))
+
 step_counter = 0
 train_step = 0
 if opt.method == 'ddpg':
