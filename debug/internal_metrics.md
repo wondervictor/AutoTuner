@@ -1,8 +1,8 @@
 ## Debug - Internal Metrics
 
-**测试内部metric正确性
+**测试内部metric正确性**
 
-> Update: 2018-05-02
+> Update: 2018-05-03
 
 ```` python
 
@@ -112,13 +112,18 @@
 
 ## Internal Metric 信息
 
+* x: 在不同knob和负载下会改变
+* xx: 改变比较大
+* x (write): 在含有写的workload下会改变
+
+
 |            Name                  |     Type     |     Value    |
 |----------------------------------|--------------|--------------|
-| adaptive_hash_searches           |status_counter|0.00000000e+00|
+| adaptive_hash_searches           |status_counter|x (write)|
 | adaptive_hash_searches_btree     |status_counter|x|
 | buffer_data_reads                |status_counter|x|
 | buffer_data_written              |status_counter|x|
-| buffer_pages_created             |status_counter|0.00000000e+00|
+| buffer_pages_created             |status_counter|x (write)|
 | buffer_pages_read                |status_counter|x|
 | buffer_pages_written             |status_counter|x|
 | buffer_pool_bytes_data           |     value    |x|
@@ -135,10 +140,10 @@
 | buffer_pool_size                 |     value    |x|
 | buffer_pool_wait_free            |status_counter|0.00000000e+00|
 | buffer_pool_write_requests       |status_counter|x|
-| dml_deletes                      |status_counter|0.00000000e+00|
-| dml_inserts                      |status_counter|0.00000000e+00|
+| dml_deletes                      |status_counter|x (write)|
+| dml_inserts                      |status_counter|x (write)|
 | dml_reads                        |status_counter|x|
-| dml_updates                      |status_counter|0.00000000e+00|
+| dml_updates                      |status_counter|x (write)|
 | file_num_open_files              |     value    |x|
 | ibuf_merges                      |status_counter|0.00000000e+00|
 | ibuf_merges_delete               |status_counter|0.00000000e+00|
@@ -147,8 +152,8 @@
 | ibuf_merges_discard_delete_mark  |status_counter|0.00000000e+00|
 | ibuf_merges_discard_insert       |status_counter|0.00000000e+00|
 | ibuf_merges_insert               |status_counter|0.00000000e+00|
-| ibuf_size                        |status_counter|0.00000000e+00|
-| innodb_activity_count            |status_counter|0.00000000e+00|
+| ibuf_size                        |status_counter|x (write)|
+| innodb_activity_count            |status_counter|x (write)|
 | innodb_dblwr_pages_written       |status_counter|xx|
 | innodb_dblwr_writes              |status_counter|xx|
 | innodb_page_size                 |status_counter|1.63840000e+04|
@@ -157,13 +162,13 @@
 | innodb_rwlock_s_spin_waits       |status_counter|x|
 | innodb_rwlock_x_os_waits         |status_counter|xx|
 | innodb_rwlock_x_spin_rounds      |status_counter|x|
-| innodb_rwlock_x_spin_waits       |status_counter|0.00000000e+00|
+| innodb_rwlock_x_spin_waits       |status_counter|x (write)|
 | lock_deadlocks                   |    counter   |0.00000000e+00|
 | lock_row_lock_current_waits      |status_counter|0.00000000e+00|
-| lock_row_lock_time               |status_counter|0.00000000e+00|
+| lock_row_lock_time               |status_counter|x (write)|
 | lock_row_lock_time_avg           |     value    |0.00000000e+00|
 | lock_row_lock_time_max           |     value    |0.00000000e+00|
-| lock_row_lock_waits              |status_counter|0.00000000e+00|
+| lock_row_lock_waits              |status_counter|x (write)|
 | lock_timeouts                    |    counter   |0.00000000e+00|
 | log_waits                        |status_counter|0.00000000e+00|
 | log_writes                       |status_counter|8.00000000e+00|
@@ -174,8 +179,8 @@
 | os_data_writes                   |status_counter|x|
 | os_log_bytes_written             |status_counter|xx|
 | os_log_fsyncs                    |status_counter|x|
-| os_log_pending_fsyncs            |status_counter|0.00000000e+00|
-| os_log_pending_writes            |status_counter|0.00000000e+00|
-| trx_rseg_history_len             |     value    |5.32000000e+02|
+| os_log_pending_fsyncs            |status_counter|x (write)|
+| os_log_pending_writes            |status_counter|x (write)|
+| trx_rseg_history_len             |     value    |x (write)|
 
 
