@@ -63,6 +63,7 @@ def modify_configurations(server_ip, instance_name, configuration):
         def make_connection(self, host):
             h = httplib.HTTPConnection(host, timeout=self.timeout)
             return h
+
     transport = TimeoutTransport()
     transport.set_timeout(60)
 

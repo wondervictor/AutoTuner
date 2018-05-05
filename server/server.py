@@ -66,12 +66,14 @@ def write_cnf_file(configs):
     cnf_file = '/etc/mysql/conf.d/mysql.cnf'
     config_parser = CP.ConfigParser()
     sudo_exec('sudo chmod 777 %s' % cnf_file, '123456')
+    time.sleep(2)
     config_parser.read(cnf_file)
     for param in configs:
         pair_ = param.split(':')
         config_parser.set('mysqld', pair_[0], pair_[1])
     config_parser.write(open(cnf_file, 'w'))
     sudo_exec('sudo chmod 744 %s' % cnf_file, '123456')
+    time.sleep(2)
 
 
 def serve():

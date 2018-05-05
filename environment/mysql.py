@@ -287,7 +287,7 @@ class Server(MySQLEnv):
         )
 
         steps = 0
-        max_steps = 60
+        max_steps = 120
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
             time.sleep(5)
@@ -461,7 +461,7 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 60
+        max_steps = 120
 
         status = self._get_setup_state(workid=workid)
         while status == 'running' and steps < max_steps:
