@@ -47,7 +47,7 @@ def get_metrics(config):
     return value
 
 
-def modify_configurations_by_start(server_ip, instance_name, configuration):
+def modify_configurations(server_ip, instance_name, configuration):
     """ Modify the configurations by restarting the mysql through Docker
     Args:
         server_ip: str, instance's server IP Addr
@@ -67,13 +67,10 @@ def modify_configurations_by_start(server_ip, instance_name, configuration):
     transport.set_timeout(60)
 
     s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
-    params = ''
-    for key in configuration.keys():
-        params += ' --%s=%s' % (key, configuration[key])
 
     while True:
         try:
-            s.start_mysql(instance_name, params)
+            s.start_mysql(instance_name, configuration)
         except xmlrpclib.Fault:
             time.sleep(5)
         break

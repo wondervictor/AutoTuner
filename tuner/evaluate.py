@@ -28,7 +28,7 @@ opt = parser.parse_args()
 if opt.tencent:
     env = environment.TencentServer(wk_type=opt.workload,instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
 else:
-    env = environment.DockerServer(wk_type=opt.workload, instance_name=opt.instance)
+    env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
 
 tconfig = tuner_configs.config
 

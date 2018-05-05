@@ -6,22 +6,22 @@ desciption: Knob information
 
 import utils
 
-KNOBS = ['skip_name_resolve',
-         'table_open_cache',
-         'max_connections',
-         'innodb_buffer_pool_size',
-         'innodb_buffer_pool_instances',
-         'innodb_log_files_in_group',
-         'innodb_log_file_size',
-         'innodb_purge_threads',
-         'innodb_read_io_threads',
-         'innodb_write_io_threads',
-         'innodb_file_per_table',
-         'binlog_checksum',
-         'binlog_cache_size',
-         'max_binlog_cache_size',
-         'max_binlog_size',
-         'binlog_format'
+KNOBS = ['skip_name_resolve',               # OFF
+         'table_open_cache',                # 2000
+         'max_connections',                 # 151
+         'innodb_buffer_pool_size',         # 134217728
+         'innodb_buffer_pool_instances',    # 8
+         'innodb_log_files_in_group',       # 2
+         'innodb_log_file_size',            # 50331648
+         'innodb_purge_threads',            # 1
+         'innodb_read_io_threads',          # 4
+         'innodb_write_io_threads',         # 4
+         'innodb_file_per_table',           # ON
+         'binlog_checksum',                 # CRC32
+         'binlog_cache_size',               # 32768
+         'max_binlog_cache_size',           # 18446744073709547520
+         'max_binlog_size',                 # 1073741824
+         'binlog_format'                    # STATEMENT
          ]
 
 # TENCENT Mysql Instance Memory

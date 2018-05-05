@@ -224,8 +224,8 @@ class MySQLEnv(object):
         return self.terminate
 
 
-class DockerServer(MySQLEnv):
-    """ Build an environment with Docker
+class Server(MySQLEnv):
+    """ Build an environment directly on Server
     """
     def __init__(self, wk_type, instance_name):
         MySQLEnv.__init__(self, wk_type)
@@ -280,7 +280,7 @@ class DockerServer(MySQLEnv):
             flag: whether the setup is valid
         """
         self.steps += 1
-        utils.modify_configurations_by_start(
+        utils.modify_configurations(
             server_ip=self.server_ip,
             instance_name=self.instance_name,
             configuration=knob
@@ -295,7 +295,7 @@ class DockerServer(MySQLEnv):
             steps += 1
 
         if not flag:
-            utils.modify_configurations_by_start(
+            utils.modify_configurations(
                 server_ip=self.server_ip,
                 instance_name=self.instance_name,
                 configuration=self.default_knobs
@@ -308,6 +308,9 @@ class DockerServer(MySQLEnv):
             return False
         else:
             return True
+
+
+DockerServer = Server
 
 
 class TencentServer(MySQLEnv):

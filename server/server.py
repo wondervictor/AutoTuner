@@ -7,7 +7,11 @@ import os
 import time
 import pexpect
 import platform
+import argparse
+import ConfigParser as CP
 from SimpleXMLRPCServer import SimpleXMLRPCServer
+
+docker = False
 
 
 def sudo_exec(cmdline, passwd):
@@ -32,14 +36,35 @@ def start_mysql(instance_name, configs):
         instance_name: str, MySQL Server Instance Name eg. ["mysql1", "mysql2"]
         configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
     """
-    sudo_exec('sudo docker stop %s' % instance_name, '123456')
-    sudo_exec('sudo docker rm %s' % instance_name, '123456')
-    time.sleep(2)
-    cmd = 'sudo docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=12345678 ' \
-          '-d -p 0.0.0.0:3365:3306 -v /data/{}/:/var/lib/mysql mysql:5.6 {}'.format(instance_name, configs)
-    print(cmd)
-    sudo_exec(cmd, '123456')
+
+    if docker:
+        params = ''
+        for key in configs.keys():
+            params += ' --%s=%s' % (key, configs[key])
+        sudo_exec('sudo docker stop %s' % instance_name, '123456')
+        sudo_exec('sudo docker rm %s' % instance_name, '123456')
+        time.sleep(2)
+        cmd = 'sudo docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=12345678 ' \
+              '-d -p 0.0.0.0:3365:3306 -v /data/{}/:/var/lib/mysql mysql:5.6 {}'.format(instance_name, configs)
+        print(cmd)
+        sudo_exec(cmd, '123456')
+    else:
+        write_cnf_file(configs)
+        sudo_exec('sudo service mysql restart', '123456')
+    time.sleep(5)
     return 1
+
+
+def write_cnf_file(configs):
+    """
+    Args:
+        configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
+    """
+    cnf_file = '/etc/mysql/conf.d/mysql.cnf'
+    config_parser = CP.ConfigParser()
+    config_parser.read(cnf_file)
+    for k, v in configs.items():
+        config_parser.set('[mysqld]', k, v)
 
 
 def serve():
@@ -50,4 +75,12 @@ def serve():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--docker', action='store_true')
+    opt = parser.parse_args()
+    if opt.docker:
+        docker = True
+
     serve()
+
