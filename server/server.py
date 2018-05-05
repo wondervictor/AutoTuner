@@ -14,6 +14,15 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 docker = False
 
 
+def get_state():
+    m = os.popen('service mysql status')
+    s = m.readlines()[2]
+    s = s.split(':')[1].replace(' ', '').split('(')[0]
+    if s == 'failed':
+        return -1
+    return 1
+
+
 def sudo_exec(cmdline, passwd):
     osname = platform.system()
     if osname == 'Linux':
@@ -80,6 +89,7 @@ def serve():
 
     server = SimpleXMLRPCServer(('0.0.0.0', 20000))
     server.register_function(start_mysql)
+    server.register_function(get_state)
     server.serve_forever()
 
 

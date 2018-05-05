@@ -47,6 +47,34 @@ def get_metrics(config):
     return value
 
 
+class TimeoutTransport(xmlrpclib.Transport):
+    timeout = 30.0
+
+    def set_timeout(self, timeout):
+        self.timeout = timeout
+
+    def make_connection(self, host):
+        h = httplib.HTTPConnection(host, timeout=self.timeout)
+        return h
+
+
+def get_mysql_state(server_ip):
+    """ get mysql state
+    Args:
+        server_ip: str, ip address
+    """
+    transport = TimeoutTransport()
+    transport.set_timeout(60)
+
+    s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
+
+    m = s.get_state()
+    if m == -1:
+        return False
+
+    return True
+
+
 def modify_configurations(server_ip, instance_name, configuration):
     """ Modify the configurations by restarting the mysql through Docker
     Args:
@@ -54,15 +82,6 @@ def modify_configurations(server_ip, instance_name, configuration):
         instance_name: str, instance's name
         configuration: dict, configurations
     """
-    class TimeoutTransport(xmlrpclib.Transport):
-        timeout = 30.0
-
-        def set_timeout(self, timeout):
-            self.timeout = timeout
-
-        def make_connection(self, host):
-            h = httplib.HTTPConnection(host, timeout=self.timeout)
-            return h
 
     transport = TimeoutTransport()
     transport.set_timeout(60)

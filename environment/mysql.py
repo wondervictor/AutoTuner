@@ -290,6 +290,9 @@ class Server(MySQLEnv):
         max_steps = 120
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
+            _st = utils.get_mysql_state(self.server_ip)
+            if not _st:
+                return False
             time.sleep(5)
             flag = utils.test_mysql(self.instance_name)
             steps += 1
