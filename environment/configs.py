@@ -9,14 +9,14 @@ docker_config = {
         'host': '192.168.0.11',
         'user': 'root',
         'passwd': '12345678',
-        'port': 3365,
+        'port': 3306,
         'database': 'data'
     },
     'mysql2': {
         'host': '192.168.0.15',
         'user': 'root',
         'passwd': '12345678',
-        'port': 3365,
+        'port': 3306,
         'database': 'data'
     },
 }
