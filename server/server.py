@@ -69,6 +69,7 @@ def write_cnf_file(configs):
     for param in configs:
         pair_ = param.split(':')
         config_parser.set('[mysqld]', pair_[0], pair_[1])
+    config_parser.write(open(cnf_file, 'w'))
 
 
 def serve():
