@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-nohup python server.py >> server.log &
+nohup sudo python server.py >> server.log &
