@@ -67,10 +67,14 @@ def modify_configurations(server_ip, instance_name, configuration):
     transport.set_timeout(60)
 
     s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
+    params = []
+    for k, v in configuration.items():
+        params.append('%s:%s' % (k, v))
+    params = ','.join(params)
 
     while True:
         try:
-            s.start_mysql(instance_name, configuration)
+            s.start_mysql(instance_name, params)
         except xmlrpclib.Fault:
             time.sleep(5)
         break

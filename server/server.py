@@ -34,22 +34,25 @@ def start_mysql(instance_name, configs):
     """
     Args:
         instance_name: str, MySQL Server Instance Name eg. ["mysql1", "mysql2"]
-        configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
+        configs: str, Formatted MySQL Parameters, e.g. "name:value,name:value"
     """
 
+    params = configs.split(',')
+
     if docker:
-        params = ''
-        for key in configs.keys():
-            params += ' --%s=%s' % (key, configs[key])
+        _params = ''
+        for param in params:
+            pair_ = param.split(':')
+            _params += ' --%s=%s' % (pair_[0], pair_[1])
         sudo_exec('sudo docker stop %s' % instance_name, '123456')
         sudo_exec('sudo docker rm %s' % instance_name, '123456')
         time.sleep(2)
         cmd = 'sudo docker run --name mysql1 -e MYSQL_ROOT_PASSWORD=12345678 ' \
-              '-d -p 0.0.0.0:3365:3306 -v /data/{}/:/var/lib/mysql mysql:5.6 {}'.format(instance_name, configs)
+              '-d -p 0.0.0.0:3365:3306 -v /data/{}/:/var/lib/mysql mysql:5.6 {}'.format(instance_name, _params)
         print(cmd)
         sudo_exec(cmd, '123456')
     else:
-        write_cnf_file(configs)
+        write_cnf_file(params)
         sudo_exec('sudo service mysql restart', '123456')
     time.sleep(5)
     return 1
@@ -63,8 +66,9 @@ def write_cnf_file(configs):
     cnf_file = '/etc/mysql/conf.d/mysql.cnf'
     config_parser = CP.ConfigParser()
     config_parser.read(cnf_file)
-    for k, v in configs.items():
-        config_parser.set('[mysqld]', k, v)
+    for param in configs:
+        pair_ = param.split(':')
+        config_parser.set('[mysqld]', pair_[0], pair_[1])
 
 
 def serve():
