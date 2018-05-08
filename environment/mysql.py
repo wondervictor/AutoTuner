@@ -57,11 +57,11 @@ class MySQLEnv(object):
             latency = 0
             qps = 0
 
-            for i in temporal[2:]:
+            for i in temporal[3:]:
                 tps += float(i[0])
                 latency += float(i[5])
                 qps += float(i[1])
-            num_samples = len(temporal[2:])
+            num_samples = len(temporal[3:])
             tps /= num_samples
             qps /= num_samples
             latency /= num_samples
@@ -194,6 +194,8 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * (1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * (1-deltat)
+        if _reward > 0 and deltat < 0:
+            _reward = 0
         return _reward
 
     def _get_reward(self, external_metrics):
