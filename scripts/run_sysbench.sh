@@ -22,7 +22,7 @@ sysbench ${run_script} \
 	--db-driver=mysql \
 	--tables=8 \
 	--table-size=5000000 \
-	--report-interval=5 \
+	--report-interval=3 \
 	--threads=48 \
 	--time=60 \
 	run >> $5
