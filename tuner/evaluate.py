@@ -95,7 +95,7 @@ max_step = 0
 max_value = 0.0
 generate_knobs = []
 current_state = env.initialize()
-model.reset(0.01)
+model.reset(0.1)
 while step_counter < 20:
     state = current_state
     action = model.choose_action(state)

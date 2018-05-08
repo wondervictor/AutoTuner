@@ -67,9 +67,12 @@ def get_mysql_state(server_ip):
     transport.set_timeout(60)
 
     s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
-
-    m = s.get_state()
+    try:
+        m = s.get_state()
+    except xmlrpclib.Fault:
+        return True
     if m == -1:
+        print("Set Failed")
         return False
 
     return True
