@@ -194,7 +194,7 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * (1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * (1-deltat)
-        if deltat < 0:
+        if _reward and deltat < 0:
             _reward = 0
         return _reward
 
@@ -289,7 +289,7 @@ class Server(MySQLEnv):
         )
 
         steps = 0
-        max_steps = 120
+        max_steps = 300
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
             _st = utils.get_mysql_state(self.server_ip)
@@ -466,7 +466,7 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 120
+        max_steps = 300
 
         status = self._get_setup_state(workid=workid)
         while status == 'running' and steps < max_steps:
@@ -478,7 +478,8 @@ class TencentServer(MySQLEnv):
         if status == 'normal_finish':
             return True
 
-        if status == 'undoed' or steps > max_steps:
+        if status == 'undoed' or status == 'paused' or steps > max_steps:
+            time.sleep(10)
             params = ''
             for key in knob.keys():
                 params += ' --%s=%s' % (key, knob[key])

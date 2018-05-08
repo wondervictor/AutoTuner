@@ -350,7 +350,7 @@ class DDPG(object):
         action = act.data.numpy()
 
         # action += self.noise.noise()
-        return action.clip(0.02, 1)
+        return action
 
     def sample_noise(self):
         self.actor.sample_noise()
