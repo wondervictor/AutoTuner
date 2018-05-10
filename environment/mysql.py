@@ -41,8 +41,6 @@ class MySQLEnv(object):
         self.time_decay_1 = time_decay1
         self.time_decay_2 = time_decay2
 
-        self.default_knobs = knobs.get_init_knobs()
-
     @staticmethod
     def _get_external_metrics(path):
 

@@ -138,7 +138,7 @@ class CriticLow(nn.Module):
 
 class Actor(nn.Module):
 
-    def __init__(self, n_states, n_actions, ):
+    def __init__(self, n_states, n_actions, noisy=False):
         super(Actor, self).__init__()
         self.layers = nn.Sequential(
             nn.Linear(n_states, 128),
@@ -151,7 +151,10 @@ class Actor(nn.Module):
             nn.Tanh(),
             nn.BatchNorm1d(64),
         )
-        self.noisy_linear = NoisyLinear(64, n_actions)
+        if noisy:
+            self.out = NoisyLinear(64, n_actions)
+        else:
+            self.out = nn.Linear(64, n_actions)
         self._init_weights()
         self.act = nn.Sigmoid()
 
@@ -167,7 +170,7 @@ class Actor(nn.Module):
 
     def forward(self, x):
 
-        out = self.act(self.noisy_linear(self.layers(x)))
+        out = self.act(self.out(self.layers(x)))
         return out
 
 
@@ -213,7 +216,7 @@ class Critic(nn.Module):
 
 class DDPG(object):
 
-    def __init__(self, n_states, n_actions, opt, mean_var_path=None, supervised=False):
+    def __init__(self, n_states, n_actions, opt, ouprocess=True, mean_var_path=None, supervised=False):
         """ DDPG Algorithms
         Args:
             n_states: int, dimension of states
@@ -231,6 +234,7 @@ class DDPG(object):
         self.batch_size = opt['batch_size']
         self.gamma = opt['gamma']
         self.tau = opt['tau']
+        self.ouprocess = ouprocess
         if mean_var_path is None:
             mean = np.zeros(n_states)
             var = np.zeros(n_states)
@@ -256,13 +260,20 @@ class DDPG(object):
         return Variable(torch.FloatTensor(x))
 
     def _build_actor(self):
-        self.actor = Actor(self.n_states, self.n_actions)
+        if self.ouprocess:
+            noisy = False
+        else:
+            noisy = True
+        self.actor = Actor(self.n_states, self.n_actions, noisy=noisy)
         self.actor_criterion = nn.MSELoss()
         self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters())
 
     def _build_network(self):
-
-        self.actor = Actor(self.n_states, self.n_actions)
+        if self.ouprocess:
+            noisy = False
+        else:
+            noisy = True
+        self.actor = Actor(self.n_states, self.n_actions, noisy=noisy)
         self.target_actor = Actor(self.n_states, self.n_actions)
         self.critic = Critic(self.n_states, self.n_actions)
         self.target_critic = Critic(self.n_states, self.n_actions)
@@ -349,9 +360,9 @@ class DDPG(object):
         act = self.actor(self.normalizer([x.tolist()])).squeeze(0)
         self.actor.train()
         action = act.data.numpy()
-
-        # action += self.noise.noise()
-        return action
+        if self.ouprocess:
+            action += self.noise.noise()
+        return action.clip(0, 1)
 
     def sample_noise(self):
         self.actor.sample_noise()
