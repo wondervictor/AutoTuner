@@ -37,8 +37,8 @@ if opt.method == 'ddpg':
 
     ddpg_opt = dict()
     ddpg_opt['tau'] = 0.002
-    ddpg_opt['alr'] = 0.005
-    ddpg_opt['clr'] = 0.001
+    ddpg_opt['alr'] = 0.0005
+    ddpg_opt['clr'] = 0.0001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
     ddpg_opt['batch_size'] = tconfig['batch_size']

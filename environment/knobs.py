@@ -166,15 +166,19 @@ def gen_continuous(action):
         value = UNIFIED_KNOBS[name]
         knob_type = value[0]
         knob_value = value[1]
+        min_value = KNOB_DETAILS[name][1][0]
         if knob_type == 'integer_MB':
             max_val = knob_value[1]
             eval_value = int(max_val * action[idx])*1024*1024
+            eval_value = max(eval_value, min_value)
         elif knob_type == 'integer_GB':
             max_val = knob_value[1]
             eval_value = int(max_val * action[idx])*1024*1024*1024
+            eval_value = max(eval_value, min_value)
         elif knob_type == 'integer':
             max_val = knob_value[1]
             eval_value = int(max_val * action[idx])
+            eval_value = max(eval_value, min_value)
         else:
             enum_size = len(knob_value)
             enum_index = int(enum_size * action[idx])
