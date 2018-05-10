@@ -9,7 +9,7 @@ import httplib
 import MySQLdb
 import xmlrpclib
 
-from configs import docker_config
+from configs import instance_config
 from warnings import filterwarnings
 filterwarnings('error', category=MySQLdb.Warning)
 
@@ -112,7 +112,7 @@ def test_mysql(instance_name):
         instance_name: str, instance's name
     """
 
-    db_config = docker_config[instance_name]
+    db_config = instance_config[instance_name]
     try:
         db = MySQLdb.connect(
             host=db_config['host'],

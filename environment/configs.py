@@ -4,31 +4,34 @@
 description: MySQL Database Configurations
 """
 
-docker_config = {
+instance_config = {
     'mysql1': {
         'host': '192.168.0.11',
         'user': 'root',
         'passwd': '12345678',
         'port': 3306,
-        'database': 'data'
+        'database': 'data',
+        'memory': 34359738368
     },
     'mysql2': {
         'host': '192.168.0.15',
         'user': 'root',
         'passwd': '12345678',
         'port': 3306,
-        'database': 'data'
+        'database': 'data',
+        'memory': 34359738368
     },
-}
 
-
-server_config = {
-    'mysql1': {
-        'instance_id': 'e1ecd360-3d3f-11e8-b828-70e2840ca2fd',
-        'host': '100.119.17.24',
-        'port': 20149,
+    'tencent1': {
+        'instance_id': '0647235a-4f92-11e8-8b5a-80fb06afab26',
+        'host': '100.121.150.87',
+        'port': 20120,
         'passwd': '123456',
         'user': 'root',
-        'operator': 'zakijzhang'
+        'operator': 'zakijzhang',
+        'memory': 8589934592
     }
 }
+
+
+

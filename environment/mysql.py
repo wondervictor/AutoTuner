@@ -57,11 +57,11 @@ class MySQLEnv(object):
             latency = 0
             qps = 0
 
-            for i in temporal[3:]:
+            for i in temporal[5:]:
                 tps += float(i[0])
                 latency += float(i[5])
                 qps += float(i[1])
-            num_samples = len(temporal[3:])
+            num_samples = len(temporal[5:])
             tps /= num_samples
             qps /= num_samples
             latency /= num_samples
@@ -229,6 +229,7 @@ class MySQLEnv(object):
 class Server(MySQLEnv):
     """ Build an environment directly on Server
     """
+
     def __init__(self, wk_type, instance_name):
         MySQLEnv.__init__(self, wk_type)
         self.wk_type = wk_type
@@ -237,9 +238,10 @@ class Server(MySQLEnv):
         self.terminate = False
         self.last_external_metrics = None
         self.instance_name = instance_name
-        self.db_info = configs.docker_config[instance_name]
+        self.db_info = configs.instance_config[instance_name]
         self.server_ip = self.db_info['host']
         self.alpha = 1.0
+        knobs.init_knobs(instance_name)
         self.default_knobs = knobs.get_init_knobs()
 
     def initialize(self):
@@ -270,9 +272,7 @@ class Server(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
-            external_metrics[0], external_metrics[1], external_metrics[2]))
-        return state
+        return state, external_metrics
 
     def _apply_knobs(self, knob):
         """ Apply the knobs to the mysql
@@ -321,7 +321,7 @@ DockerServer = Server
 class TencentServer(MySQLEnv):
     """ Build an environment in Tencent Cloud
     """
-    URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
+    URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"
 
     def __init__(self, wk_type, instance_name, request_url):
         """Initialize `TencentServer` Class
@@ -337,9 +337,10 @@ class TencentServer(MySQLEnv):
         self.terminate = False
         self.last_external_metrics = None
         self.instance_name = instance_name
-        self.db_info = configs.server_config[instance_name]
+        self.db_info = configs.instance_config[instance_name]
         self.url = request_url
         self.alpha = 1.0
+        knobs.init_knobs(instance_name)
         self.default_knobs = knobs.get_init_knobs()
 
     def _set_params(self, knob):
@@ -433,9 +434,7 @@ class TencentServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
-            external_metrics[0], external_metrics[1], external_metrics[2]))
-        return state
+        return state, external_metrics
 
     def _apply_knobs(self, knob):
         """ Apply the knobs to the mysql

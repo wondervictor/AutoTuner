@@ -17,9 +17,10 @@ from torch.autograd import Variable
 from OUProcess import OUProcess
 from replay_memory import ReplayMemory
 
+
 # code from https://github.com/Kaixhin/NoisyNet-A3C/blob/master/model.py
 class NoisyLinear(nn.Linear):
-    def __init__(self, in_features, out_features, sigma_init=0.02, bias=True):
+    def __init__(self, in_features, out_features, sigma_init=0.05, bias=True):
         super(NoisyLinear, self).__init__(in_features, out_features, bias=True)  # TODO: Adapt for no bias
         # µ^w and µ^b reuse self.weight and self.bias
         self.sigma_init = sigma_init
