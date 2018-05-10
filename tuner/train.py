@@ -21,6 +21,7 @@ parser.add_argument('--workload', type=str, default='read', help='Workload type 
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
 parser.add_argument('--memory', type=str, default='', help='add replay memory')
+parser.add_argument('--noisy', action='store_true', help='use noisy linear layer')
 
 opt = parser.parse_args()
 
@@ -48,7 +49,9 @@ if opt.method == 'ddpg':
         n_states=tconfig['num_states'],
         n_actions=tconfig['num_actions'],
         opt=ddpg_opt,
-        mean_var_path='mean_var.pkl')
+        mean_var_path='mean_var.pkl',
+        ouprocess=not opt.noisy
+    )
 
 else:
 
@@ -114,7 +117,7 @@ for episode in xrange(tconfig['epoches']):
     logger.info("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
         initial_metrics[0], initial_metrics[1], initial_metrics[2]))
 
-    # model.reset(sigma)
+    model.reset(sigma)
     t = 0
     while True:
         state = current_state
