@@ -166,7 +166,7 @@ class Actor(nn.Module):
                 m.bias.data.uniform_(-0.1, 0.1)
 
     def sample_noise(self):
-        self.noisy_linear.sample_noise()
+        self.out.sample_noise()
 
     def forward(self, x):
 

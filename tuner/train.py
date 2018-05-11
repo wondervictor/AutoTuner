@@ -121,7 +121,8 @@ for episode in xrange(tconfig['epoches']):
     t = 0
     while True:
         state = current_state
-        model.sample_noise()
+        if opt.noisy:
+            model.sample_noise()
         action = model.choose_action(state)
         if opt.method == 'ddpg':
             current_knob = generate_knob(action, 'ddpg')
