@@ -74,7 +74,8 @@ def get_mysql_state(server_ip):
     except xmlrpclib.Fault:
         return True
     if m == -1:
-        print("Set Failed")
+        sys.stdout.write('.')
+        sys.stdout.flush()
         return False
 
     return True

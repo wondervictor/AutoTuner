@@ -114,7 +114,7 @@ if len(opt.memory) > 0:
 
 for episode in xrange(tconfig['epoches']):
     current_state, initial_metrics = env.initialize()
-    logger.info("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
+    logger.info("\n[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
         initial_metrics[0], initial_metrics[1], initial_metrics[2]))
 
     model.reset(sigma)
@@ -133,7 +133,7 @@ for episode in xrange(tconfig['epoches']):
             logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
-        logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
+        logger.info("\n[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
             opt.method, episode, t, metrics[0], metrics[1], metrics[2], reward, score, done
         ))
 

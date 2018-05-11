@@ -54,7 +54,7 @@ def init_knobs(instance):
         'innodb_file_per_table': ['enum', ['OFF', 'ON']],
         'binlog_checksum': ['enum', ['NONE', 'CRC32']],
         'binlog_cache_size': ['integer', [1048, 34359738368, 32768]],
-        'max_binlog_cache_size': ['integer', [4096, 18446744073709551615, 18446744073709547520]],
+        'max_binlog_cache_size': ['integer', [4096, 4294967296, 4294967296]],
         'max_binlog_size': ['integer', [4096, 1073741824, 1073741824]],
         'binlog_format': ['enum', ['ROW', 'MIXED']],
     }
@@ -95,6 +95,7 @@ def gen_continuous(action):
         if name == 'innodb_log_file_size':
             max_val = 32 * 1024 * 1024 * 1024 / knobs['innodb_log_files_in_group']
             eval_value = int(max_val * action[idx])
+            eval_value = max(eval_value, min_value)
         knobs[name] = eval_value
 
     return knobs

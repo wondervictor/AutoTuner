@@ -1,0 +1,27 @@
+2018-05-11 12:16:10[INFO] [Env initialized][Metric tps: 351.906 lat: 178.442 qps: 5629.78]
+2018-05-11 12:16:10[INFO] [ddpg] Action: [ 0.47940138  0.57705957  0.3087233   0.32485974  0.34926122  0.60351861
+  0.56456691  0.41517344  0.47723722  0.53141981  0.39052588  0.47546157
+  0.50166732  0.52254045  0.36554858  0.44270679]
+2018-05-11 12:16:49[INFO] [ddpg][Episode: 0][Step: 0][Metric tps:0 lat:0 qps:0]Reward: -100.0 Score: -100.0 Done: True
+Error in my_thread_global_end(): 48 threads didn't exit
+Instance: mysql2 Memory: 34359738368
+Finish Initializing Networks
+DDPG Initialzed!
+Set Failed
+Set Failed
+Set Failed
+Set Failed
+Set Failed
+[GET Metrics]Exception:
+Traceback (most recent call last):
+  File "train.py", line 116, in <module>
+    current_state, initial_metrics = env.initialize()
+  File "../environment/mysql.py", line 264, in initialize
+    external_metrics, internal_metrics = self._get_state()
+  File "../environment/mysql.py", line 178, in _get_state
+    external_metrics = self._get_external_metrics(filename)
+  File "../environment/mysql.py", line 68, in _get_external_metrics
+    result = parse_sysbench_new(path)
+  File "../environment/mysql.py", line 63, in parse_sysbench_new
+    tps /= num_samples
+ZeroDivisionError: integer division or modulo by zero
