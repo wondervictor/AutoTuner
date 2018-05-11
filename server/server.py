@@ -72,7 +72,7 @@ def write_cnf_file(configs):
     Args:
         configs: str, Formatted MySQL Parameters, e.g. "--binlog_size=xxx"
     """
-    cnf_file = '/etc/mysql/conf.d/mysql.cnf'
+    cnf_file = '/etc/mysql/my.cnf'
     config_parser = CP.ConfigParser()
     sudo_exec('sudo chmod 777 %s' % cnf_file, '123456')
     time.sleep(2)

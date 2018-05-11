@@ -54,7 +54,7 @@ def init_knobs(instance):
         'innodb_file_per_table': ['enum', ['OFF', 'ON']],
         'binlog_checksum': ['enum', ['NONE', 'CRC32']],
         'binlog_cache_size': ['integer', [1048, 34359738368, 32768]],
-        'max_binlog_cache_size': ['integer', [4398046511104, 18446744073709551615, 18446744073709547520]],
+        'max_binlog_cache_size': ['integer', [4096, 18446744073709551615, 18446744073709547520]],
         'max_binlog_size': ['integer', [4096, 1073741824, 1073741824]],
         'binlog_format': ['enum', ['ROW', 'MIXED']],
     }

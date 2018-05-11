@@ -463,10 +463,10 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 300
+        max_steps = 500
 
         status = self._get_setup_state(workid=workid)
-        while status == 'running' and steps < max_steps:
+        while status in ['running', 'pause', 'paused'] and steps < max_steps:
             time.sleep(5)
             status = self._get_setup_state(workid=workid)
             steps += 1
@@ -475,7 +475,7 @@ class TencentServer(MySQLEnv):
         if status == 'normal_finish':
             return True
 
-        if status == 'undoed' or status == 'paused' or steps > max_steps:
+        if status in ['undoed', 'undo'] or steps > max_steps:
             time.sleep(10)
             params = ''
             for key in knob.keys():
