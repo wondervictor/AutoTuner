@@ -48,7 +48,9 @@ if opt.method == 'ddpg':
         n_states=tconfig['num_states'],
         n_actions=tconfig['num_actions'],
         opt=ddpg_opt,
-        mean_var_path='mean_var.pkl')
+        mean_var_path='mean_var.pkl',
+        ouprocess=True
+    )
 
 else:
 
