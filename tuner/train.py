@@ -21,6 +21,7 @@ parser.add_argument('--workload', type=str, default='read', help='Workload type 
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
 parser.add_argument('--memory', type=str, default='', help='add replay memory')
+parser.add_argument('--noisy', action='store_true', help='use noisy linear layer')
 
 opt = parser.parse_args()
 
@@ -37,8 +38,8 @@ if opt.method == 'ddpg':
 
     ddpg_opt = dict()
     ddpg_opt['tau'] = 0.002
-    ddpg_opt['alr'] = 0.005
-    ddpg_opt['clr'] = 0.001
+    ddpg_opt['alr'] = 0.0005
+    ddpg_opt['clr'] = 0.0001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
     ddpg_opt['batch_size'] = tconfig['batch_size']
@@ -48,7 +49,9 @@ if opt.method == 'ddpg':
         n_states=tconfig['num_states'],
         n_actions=tconfig['num_actions'],
         opt=ddpg_opt,
-        mean_var_path='mean_var.pkl')
+        mean_var_path='mean_var.pkl',
+        ouprocess=not opt.noisy
+    )
 
 else:
 
@@ -88,7 +91,7 @@ def generate_knob(action, method):
     if method == 'ddpg':
         return environment.gen_continuous(action)
     else:
-        return environment.gen_discrete(action, current_knob)
+        raise NotImplementedError('Not Implemented')
 
 
 # OUProcess
@@ -110,11 +113,16 @@ if len(opt.memory) > 0:
     print("Load Memory: {}".format(len(model.replay_memory)))
 
 for episode in xrange(tconfig['epoches']):
-    current_state = env.initialize()
+    current_state, initial_metrics = env.initialize()
+    logger.info("\n[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
+        initial_metrics[0], initial_metrics[1], initial_metrics[2]))
+
     model.reset(sigma)
     t = 0
     while True:
         state = current_state
+        if opt.noisy:
+            model.sample_noise()
         action = model.choose_action(state)
         if opt.method == 'ddpg':
             current_knob = generate_knob(action, 'ddpg')
@@ -125,7 +133,7 @@ for episode in xrange(tconfig['epoches']):
             logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
         reward, state_, done, score, metrics = env.step(current_knob)
-        logger.info("[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
+        logger.info("\n[{}][Episode: {}][Step: {}][Metric tps:{} lat:{} qps:{}]Reward: {} Score: {} Done: {}".format(
             opt.method, episode, t, metrics[0], metrics[1], metrics[2], reward, score, done
         ))
 
@@ -139,7 +147,7 @@ for episode in xrange(tconfig['epoches']):
             terminate=done
         )
 
-        if score > 0.5:
+        if score > 5:
             fine_state_actions.append((state, action))
 
         current_state = next_state
@@ -168,13 +176,13 @@ for episode in xrange(tconfig['epoches']):
         if step_counter % 10 == 0:
             model.replay_memory.save('save_memory/{}.pkl'.format(expr_name))
             utils.save_state_actions(fine_state_actions, 'save_state_actions/{}.pkl'.format(expr_name))
-            sigma = origin_sigma*(sigma_decay_rate ** (step_counter/10))
+            # sigma = origin_sigma*(sigma_decay_rate ** (step_counter/10))
 
         # save network
         if step_counter % 50 == 0:
             model.save_model('model_params', title='{}_{}'.format(expr_name, step_counter))
 
-        if done:
+        if done or score < -50:
             break
 
 

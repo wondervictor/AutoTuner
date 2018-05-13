@@ -41,8 +41,6 @@ class MySQLEnv(object):
         self.time_decay_1 = time_decay1
         self.time_decay_2 = time_decay2
 
-        self.default_knobs = knobs.get_init_knobs()
-
     @staticmethod
     def _get_external_metrics(path):
 
@@ -57,11 +55,11 @@ class MySQLEnv(object):
             latency = 0
             qps = 0
 
-            for i in temporal[2:]:
+            for i in temporal[5:]:
                 tps += float(i[0])
                 latency += float(i[5])
                 qps += float(i[1])
-            num_samples = len(temporal[2:])
+            num_samples = len(temporal[5:])
             tps /= num_samples
             qps /= num_samples
             latency /= num_samples
@@ -194,6 +192,8 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * (1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * (1-deltat)
+        if _reward and deltat < 0:
+            _reward = 0
         return _reward
 
     def _get_reward(self, external_metrics):
@@ -227,6 +227,7 @@ class MySQLEnv(object):
 class Server(MySQLEnv):
     """ Build an environment directly on Server
     """
+
     def __init__(self, wk_type, instance_name):
         MySQLEnv.__init__(self, wk_type)
         self.wk_type = wk_type
@@ -235,9 +236,10 @@ class Server(MySQLEnv):
         self.terminate = False
         self.last_external_metrics = None
         self.instance_name = instance_name
-        self.db_info = configs.docker_config[instance_name]
+        self.db_info = configs.instance_config[instance_name]
         self.server_ip = self.db_info['host']
         self.alpha = 1.0
+        knobs.init_knobs(instance_name)
         self.default_knobs = knobs.get_init_knobs()
 
     def initialize(self):
@@ -268,9 +270,7 @@ class Server(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
-            external_metrics[0], external_metrics[1], external_metrics[2]))
-        return state
+        return state, external_metrics
 
     def _apply_knobs(self, knob):
         """ Apply the knobs to the mysql
@@ -287,12 +287,12 @@ class Server(MySQLEnv):
         )
 
         steps = 0
-        max_steps = 120
+        max_steps = 300
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
             _st = utils.get_mysql_state(self.server_ip)
-            if not _st:
-                return False
+#            if not _st:
+#                return False
             time.sleep(5)
             flag = utils.test_mysql(self.instance_name)
             steps += 1
@@ -319,7 +319,7 @@ DockerServer = Server
 class TencentServer(MySQLEnv):
     """ Build an environment in Tencent Cloud
     """
-    URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
+    URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"
 
     def __init__(self, wk_type, instance_name, request_url):
         """Initialize `TencentServer` Class
@@ -335,9 +335,10 @@ class TencentServer(MySQLEnv):
         self.terminate = False
         self.last_external_metrics = None
         self.instance_name = instance_name
-        self.db_info = configs.server_config[instance_name]
+        self.db_info = configs.instance_config[instance_name]
         self.url = request_url
         self.alpha = 1.0
+        knobs.init_knobs(instance_name)
         self.default_knobs = knobs.get_init_knobs()
 
     def _set_params(self, knob):
@@ -431,9 +432,7 @@ class TencentServer(MySQLEnv):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        print("[Env initialized][Metric tps: {} lat: {} qps: {}]".format(
-            external_metrics[0], external_metrics[1], external_metrics[2]))
-        return state
+        return state, external_metrics
 
     def _apply_knobs(self, knob):
         """ Apply the knobs to the mysql
@@ -464,10 +463,10 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 120
+        max_steps = 500
 
         status = self._get_setup_state(workid=workid)
-        while status == 'running' and steps < max_steps:
+        while status in ['running', 'pause', 'paused'] and steps < max_steps:
             time.sleep(5)
             status = self._get_setup_state(workid=workid)
             steps += 1
@@ -476,7 +475,8 @@ class TencentServer(MySQLEnv):
         if status == 'normal_finish':
             return True
 
-        if status == 'undoed' or steps > max_steps:
+        if status in ['undoed', 'undo'] or steps > max_steps:
+            time.sleep(10)
             params = ''
             for key in knob.keys():
                 params += ' --%s=%s' % (key, knob[key])

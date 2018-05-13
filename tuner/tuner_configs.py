@@ -11,9 +11,9 @@ config = {
     'gamma': 0.99,
     'update_target': 20,
     'epoches': 100,
-    'batch_size': 4,
+    'batch_size': 16,
     'learning_rate': 0.001,
     'memory_size': 100000,
 }
 
-TENCENT_URL = "http://10.252.218.130:8080/cdb2/fun_logic/cgi-bin/public_api"
+TENCENT_URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"

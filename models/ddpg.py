@@ -4,15 +4,49 @@ Deep Deterministic Policy Gradient Model
 
 """
 
+import math
 import torch
 import pickle
 import numpy as np
 import torch.nn as nn
+from torch.nn import init, Parameter
+import torch.nn.functional as F
 import torch.optim as optimizer
 from torch.autograd import Variable
 
 from OUProcess import OUProcess
 from replay_memory import ReplayMemory
+
+
+# code from https://github.com/Kaixhin/NoisyNet-A3C/blob/master/model.py
+class NoisyLinear(nn.Linear):
+    def __init__(self, in_features, out_features, sigma_init=0.05, bias=True):
+        super(NoisyLinear, self).__init__(in_features, out_features, bias=True)  # TODO: Adapt for no bias
+        # µ^w and µ^b reuse self.weight and self.bias
+        self.sigma_init = sigma_init
+        self.sigma_weight = Parameter(torch.Tensor(out_features, in_features))  # σ^w
+        self.sigma_bias = Parameter(torch.Tensor(out_features))  # σ^b
+        self.register_buffer('epsilon_weight', torch.zeros(out_features, in_features))
+        self.register_buffer('epsilon_bias', torch.zeros(out_features))
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        if hasattr(self, 'sigma_weight'):  # Only init after all params added (otherwise super().__init__() fails)
+            init.uniform(self.weight, -math.sqrt(3 / self.in_features), math.sqrt(3 / self.in_features))
+            init.uniform(self.bias, -math.sqrt(3 / self.in_features), math.sqrt(3 / self.in_features))
+            init.constant(self.sigma_weight, self.sigma_init)
+            init.constant(self.sigma_bias, self.sigma_init)
+
+    def forward(self, input):
+        return F.linear(input, self.weight + self.sigma_weight * Variable(self.epsilon_weight), self.bias + self.sigma_bias * Variable(self.epsilon_bias))
+
+    def sample_noise(self):
+        self.epsilon_weight = torch.randn(self.out_features, self.in_features)
+        self.epsilon_bias = torch.randn(self.out_features)
+
+    def remove_noise(self):
+        self.epsilon_weight = torch.zeros(self.out_features, self.in_features)
+        self.epsilon_bias = torch.zeros(self.out_features)
 
 
 class Normalizer(object):
@@ -31,9 +65,6 @@ class Normalizer(object):
         x = x - self.mean
         x = x / self.std
 
-        print("---------------------output from model.ddpg.Normalize---------------------------")
-        print("Normalized: \n%s" % x)
-        print("--------------------------------------------------------------------------------")
         return Variable(torch.FloatTensor(x))
 
     def __call__(self, x, *args, **kwargs):
@@ -107,7 +138,7 @@ class CriticLow(nn.Module):
 
 class Actor(nn.Module):
 
-    def __init__(self, n_states, n_actions, ):
+    def __init__(self, n_states, n_actions, noisy=False):
         super(Actor, self).__init__()
         self.layers = nn.Sequential(
             nn.Linear(n_states, 128),
@@ -119,8 +150,11 @@ class Actor(nn.Module):
             nn.Linear(128, 64),
             nn.Tanh(),
             nn.BatchNorm1d(64),
-            nn.Linear(64, n_actions),
         )
+        if noisy:
+            self.out = NoisyLinear(64, n_actions)
+        else:
+            self.out = nn.Linear(64, n_actions)
         self._init_weights()
         self.act = nn.Sigmoid()
 
@@ -131,9 +165,12 @@ class Actor(nn.Module):
                 m.weight.data.normal_(0.0, 1e-2)
                 m.bias.data.uniform_(-0.1, 0.1)
 
+    def sample_noise(self):
+        self.out.sample_noise()
+
     def forward(self, x):
 
-        out = self.act(self.layers(x))
+        out = self.act(self.out(self.layers(x)))
         return out
 
 
@@ -179,7 +216,7 @@ class Critic(nn.Module):
 
 class DDPG(object):
 
-    def __init__(self, n_states, n_actions, opt, mean_var_path=None, supervised=False):
+    def __init__(self, n_states, n_actions, opt, ouprocess=True, mean_var_path=None, supervised=False):
         """ DDPG Algorithms
         Args:
             n_states: int, dimension of states
@@ -197,6 +234,7 @@ class DDPG(object):
         self.batch_size = opt['batch_size']
         self.gamma = opt['gamma']
         self.tau = opt['tau']
+        self.ouprocess = ouprocess
         if mean_var_path is None:
             mean = np.zeros(n_states)
             var = np.zeros(n_states)
@@ -222,13 +260,20 @@ class DDPG(object):
         return Variable(torch.FloatTensor(x))
 
     def _build_actor(self):
-        self.actor = Actor(self.n_states, self.n_actions)
+        if self.ouprocess:
+            noisy = False
+        else:
+            noisy = True
+        self.actor = Actor(self.n_states, self.n_actions, noisy=noisy)
         self.actor_criterion = nn.MSELoss()
         self.actor_optimizer = optimizer.Adam(lr=self.alr, params=self.actor.parameters())
 
     def _build_network(self):
-
-        self.actor = Actor(self.n_states, self.n_actions)
+        if self.ouprocess:
+            noisy = False
+        else:
+            noisy = True
+        self.actor = Actor(self.n_states, self.n_actions, noisy=noisy)
         self.target_actor = Actor(self.n_states, self.n_actions)
         self.critic = Critic(self.n_states, self.n_actions)
         self.target_critic = Critic(self.n_states, self.n_actions)
@@ -315,9 +360,12 @@ class DDPG(object):
         act = self.actor(self.normalizer([x.tolist()])).squeeze(0)
         self.actor.train()
         action = act.data.numpy()
+        if self.ouprocess:
+            action += self.noise.noise()
+        return action.clip(0, 1)
 
-        action += self.noise.noise()
-        return action.clip(0.02, 1)
+    def sample_noise(self):
+        self.actor.sample_noise()
 
     def load_model(self, model_name):
         """ Load Torch Model from files

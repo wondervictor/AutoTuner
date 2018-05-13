@@ -120,6 +120,7 @@ sl_model_params
 # Result
 result
 
+eval_result
 # Pickles
 *.pkl
 

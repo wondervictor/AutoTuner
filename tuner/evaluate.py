@@ -26,7 +26,7 @@ opt = parser.parse_args()
 
 # Create Environment
 if opt.tencent:
-    env = environment.TencentServer(wk_type=opt.workload,instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
+    env = environment.TencentServer(wk_type=opt.workload, instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
 else:
     env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
 
@@ -41,14 +41,16 @@ if opt.method == 'ddpg':
     ddpg_opt['clr'] = 0.0001
     ddpg_opt['model'] = opt.params
     ddpg_opt['gamma'] = tconfig['gamma']
-    ddpg_opt['batch_size'] = 4 # tconfig['batch_size']
+    ddpg_opt['batch_size'] = tconfig['batch_size']
     ddpg_opt['memory_size'] = tconfig['memory_size']
 
     model = models.DDPG(
         n_states=tconfig['num_states'],
         n_actions=tconfig['num_actions'],
         opt=ddpg_opt,
-        mean_var_path='mean_var.pkl')
+        mean_var_path='mean_var.pkl',
+        ouprocess=True
+    )
 
 else:
 
@@ -77,7 +79,7 @@ def generate_knob(action, method):
     if method == 'ddpg':
         return environment.gen_continuous(action)
     else:
-        return environment.gen_discrete(action, current_knob)
+        raise NotImplementedError()
 
 
 if len(opt.memory) > 0:
@@ -95,7 +97,7 @@ max_step = 0
 max_value = 0.0
 generate_knobs = []
 current_state = env.initialize()
-model.reset(0.01)
+model.reset(0.1)
 while step_counter < 20:
     state = current_state
     action = model.choose_action(state)

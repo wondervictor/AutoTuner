@@ -4,12 +4,13 @@
 description: MySQL Env Utils
 """
 
+import sys
 import time
 import httplib
 import MySQLdb
 import xmlrpclib
 
-from configs import docker_config
+from configs import instance_config
 from warnings import filterwarnings
 filterwarnings('error', category=MySQLdb.Warning)
 
@@ -68,8 +69,13 @@ def get_mysql_state(server_ip):
 
     s = xmlrpclib.ServerProxy('http://%s:20000' % server_ip, transport=transport)
 
-    m = s.get_state()
+    try:
+        m = s.get_state()
+    except xmlrpclib.Fault:
+        return True
     if m == -1:
+        sys.stdout.write('.')
+        sys.stdout.flush()
         return False
 
     return True
@@ -108,7 +114,7 @@ def test_mysql(instance_name):
         instance_name: str, instance's name
     """
 
-    db_config = docker_config[instance_name]
+    db_config = instance_config[instance_name]
     try:
         db = MySQLdb.connect(
             host=db_config['host'],
