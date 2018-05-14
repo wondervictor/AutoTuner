@@ -15,12 +15,20 @@ docker = False
 
 
 def get_state():
+    check_start()
     m = os.popen('service mysql status')
     s = m.readlines()[2]
     s = s.split(':')[1].replace(' ', '').split('(')[0]
     if s == 'failed':
         return -1
     return 1
+
+
+def check_start():
+    a = sudo_exec('sudo tail -1 /var/log/mysql/ubunturmw.err', '123456')
+    a = a.strip('\n\r')
+    if a.find('/var/lib/mysql/ubunturmw.pid ended') != -1:
+        sudo_exec('sudo service mysql start', '123456')
 
 
 def sudo_exec(cmdline, passwd):
