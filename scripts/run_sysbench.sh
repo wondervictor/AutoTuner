@@ -24,5 +24,5 @@ sysbench ${run_script} \
 	--table-size=5000000 \
 	--report-interval=3 \
 	--threads=100 \
-	--time=60 \
+	--time=150 \
 	run >> $5

@@ -2506,4 +2506,20 @@ Load Memory: 30
 2018-05-15 08:40:11[INFO] [ddpg] Action: [ 1.          0.          0.          1.          1.          0.06440603
   1.          0.60939604  0.05802429  1.          0.96901107  0.
   0.32765445  0.          0.73708546  1.        ]
-.................................................................................................................................................................
+.............................................................................................................................................................................................................................................2018-05-15 09:06:18[INFO] 
+[ddpg][Episode: 64][Step: 2][Metric tps:0 lat:0 qps:0]Reward: -100.0 Score: -41.3410672976 Done: True
+2018-05-15 09:06:18[INFO] [ddpg][Episode: 64][Step: 2] Critic: 74921.7442219 Actor: -0.162873738306
+/home/rmw/AutoTuner/scripts/run_sysbench.sh: 行 26: 未预期的符号 `<<<' 附近有语法错误
+/home/rmw/AutoTuner/scripts/run_sysbench.sh: 行 26: `<<<<<<< HEAD'
+Traceback (most recent call last):
+  File "train.py", line 116, in <module>
+    
+  File "../environment/mysql.py", line 262, in initialize
+    print("Initialize: {} times ....".format(i))
+  File "../environment/mysql.py", line 178, in _get_state
+    
+  File "../environment/mysql.py", line 68, in _get_external_metrics
+    result = parse_sysbench_new(path)
+  File "../environment/mysql.py", line 48, in parse_sysbench_new
+    with open(file_path) as f:
+IOError: [Errno 2] No such file or directory: '/home/rmw/train_result/tmp/1526346390.txt'

@@ -155,6 +155,9 @@ class MySQLEnv(object):
         )
         return reward, next_state, terminate, self.score, external_metrics
 
+    def setting(self, knob):
+        self._apply_knobs(knob)
+
     def _get_state(self):
         """Collect the Internal State and External State
         """
@@ -251,13 +254,12 @@ class Server(MySQLEnv):
         self.terminate = False
 
         flag = self._apply_knobs(self.default_knobs)
-        i = 3
-        while i >= 0 and not flag:
+        i = 0
+        while not flag:
             flag = self._apply_knobs(self.default_knobs)
-            i -= 1
-        if i < 0 and not flag:
-            print("[Env initializing failed]")
-            exit(-1)
+            i += 1
+            if i >= 5:
+                print("Initialize: {} times ....".format(i))
 
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
@@ -289,8 +291,6 @@ class Server(MySQLEnv):
         flag = utils.test_mysql(self.instance_name)
         while not flag and steps < max_steps:
             _st = utils.get_mysql_state(self.server_ip)
-#            if not _st:
-#                return False
             time.sleep(5)
             flag = utils.test_mysql(self.instance_name)
             steps += 1
@@ -397,7 +397,8 @@ class TencentServer(MySQLEnv):
         status = response['status']
         print(response)
         if err != 0:
-            raise Exception("GET STATE FAILED: {}".format(err))
+            # raise Exception("GET STATE FAILED: {}".format(err))
+            return "except"
 
         return status
 
@@ -412,13 +413,12 @@ class TencentServer(MySQLEnv):
         self.terminate = False
 
         flag = self._apply_knobs(self.default_knobs)
-        i = 3
-        while i >= 0 and not flag:
+        i = 0
+        while not flag:
             flag = self._apply_knobs(self.default_knobs)
-            i -= 1
-        if i < 0 and not flag:
-            print("[Env initializing failed]")
-            exit(-1)
+            i += 1
+            if i >= 5:
+                print("Initialize: {} times ....".format(i))
 
         external_metrics, internal_metrics = self._get_state()
         self.last_external_metrics = external_metrics
@@ -440,7 +440,7 @@ class TencentServer(MySQLEnv):
             flag: whether the setup is valid
         """
         self.steps += 1
-        i = 3
+        i = 10
         workid = ''
         while i >= 0:
             try:
@@ -461,19 +461,20 @@ class TencentServer(MySQLEnv):
 
         print("Finished setting parameters..")
         steps = 0
-        max_steps = 300
+        max_steps = 500
 
         status = self._get_setup_state(workid=workid)
-        while status == 'running' and steps < max_steps:
+        while status in ['running', 'pause', 'paused', 'undoed', 'undo', 'except'] and steps < max_steps:
             time.sleep(5)
             status = self._get_setup_state(workid=workid)
             steps += 1
+
         print("Out of Loop, status: {} loop step: {}".format(status, steps))
 
         if status == 'normal_finish':
             return True
 
-        if status == 'undoed' or status == 'paused' or steps > max_steps:
+        if status in ['not_start', 'notstart'] or steps > max_steps:
             time.sleep(10)
             params = ''
             for key in knob.keys():

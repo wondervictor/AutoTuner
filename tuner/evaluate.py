@@ -60,6 +60,8 @@ else:
 if not os.path.exists('log'):
     os.mkdir('log')
 
+if not os.path.exists('test_knob'):
+    os.mkdir('test_knob')
 
 expr_name = 'eval_{}_{}'.format(opt.method, str(utils.get_timestamp()))
 
@@ -73,6 +75,17 @@ with open('mean_var.pkl', 'rb') as f:
     mean, var = pickle.load(f)
 
 current_knob = environment.get_init_knobs()
+
+
+def compute_percentage(default, current):
+    """ compute metrics percentage versus default settings
+    Args:
+        default: dict, metrics from default settings
+        current: dict, metrics from current settings
+    """
+    delta_tps = 100*(current['tps'] - default['tps']) / default['tps']
+    delta_latency = 100*(-current['latency'] + default['latency']) / default['latency']
+    return delta_tps, delta_latency
 
 
 def generate_knob(action, method):
@@ -93,12 +106,13 @@ if opt.method == 'ddpg':
 else:
     accumulate_loss = 0
 
-max_step = 0
-max_value = 0.0
+max_score = 0
+max_idx = -1
 generate_knobs = []
-current_state, metrics  = env.initialize()
-print("[Environment Intialize]Tps: {} Lat:{}".format(metrics[0], metrics[1]))
+current_state, default_metrics = env.initialize()
 model.reset(0.1)
+print("[Environment Intialize]Tps: {} Lat:{}".format(default_metrics[0], default_metrics[1]))
+print("------------------- Starting to Test -----------------------")
 while step_counter < 20:
     state = current_state
     action = model.choose_action(state)
@@ -111,12 +125,22 @@ while step_counter < 20:
         logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
     reward, state_, done, score, metrics = env.step(current_knob)
+
     logger.info("[{}][Step: {}][Metric tps:{} lat:{}, qps: {}]Reward: {} Score: {} Done: {}".format(
         opt.method, step_counter, metrics[0], metrics[1], metrics[2], reward, score, done
     ))
 
-    next_state = state_
+    _tps, _lat = compute_percentage(default_metrics, metrics)
 
+    logger.info("[{}][Knob Idx: {}] tps increase: {} lat decrease: {}".format(
+        opt.method, step_counter, _tps, _lat
+    ))
+
+    if _tps + _lat > max_score:
+        max_score = _tps + _lat
+        max_idx = step_counter
+
+    next_state = state_
     model.replay_memory.push(
         state=state,
         reward=reward,
@@ -125,12 +149,15 @@ while step_counter < 20:
         terminate=done
     )
 
+    # {"tps_inc":xxx, "lat_dec": xxx, "metrics": xxx, "knob": xxx}
+    generate_knobs.append({"tps_inc": _tps, "lat_dec": _lat, "metrics": metrics, "knob": current_knob})
+
+    with open('test_knob/'+expr_name + '.pkl', 'wb') as f:
+        pickle.dump(generate_knobs, f)
+
     current_state = next_state
     step_counter += 1
-    generate_knobs.append((score, current_knob))
-    if max_value < score:
-        max_step = step_counter-1
-        max_value = score
+
     if len(model.replay_memory) >= tconfig['batch_size']:
         losses = []
         for i in xrange(2):
@@ -150,27 +177,11 @@ while step_counter < 20:
             ))
 
     if done:
-        current_state, metrics  = env.initialize()
-        print("[Environment Intialize]Tps: {} Lat:{}".format(metrics[0], metrics[1]))
+        current_state, _ = env.initialize()
         model.reset(0.01)
 
+print("------------------- Testing Finished -----------------------")
 
-print("Searching Finished")
-with open(expr_name + '.pkl', 'wb') as f:
-    pickle.dump(generate_knobs, f)
+print("Knobs are saved at: {}".format('test_knob/'+expr_name + '.pkl'))
+print("Proposal Knob At {}".format(max_idx))
 
-print("Knobs are saved!")
-# eval
-
-default_konbs = environment.get_init_knobs()
-max_knobs = generate_knobs[max_step][1]
-
-metric1 = env.eval(default_konbs)
-print("Default TPS: {} Latency: {}".format(metric1['tps'], metric1['latency']))
-metric2 = env.eval(max_knobs)
-print("Max TPS: {} Latency: {}".format(metric2['tps'], metric2['latency']))
-
-delta_tps = (metric2['tps'] - metric1['tps']) / metric1['tps']
-delta_latency = (-metric2['latency'] + metric1['latency']) / metric1['latency']
-
-print("[Evaluation Result] Latency Decrease: {} TPS Increase: {}".format(delta_latency, delta_tps))
