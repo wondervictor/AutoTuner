@@ -22,6 +22,6 @@ sysbench ${run_script} \
 	--tables=8 \
 	--table-size=1000000 \
 	--report-interval=10 \
-	--threads=8 \
+	--threads=1000 \
 	--time=60 \
 	prepare
