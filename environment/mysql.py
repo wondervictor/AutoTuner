@@ -55,11 +55,11 @@ class MySQLEnv(object):
             latency = 0
             qps = 0
 
-            for i in temporal[5:]:
+            for i in temporal[-10:]:
                 tps += float(i[0])
                 latency += float(i[5])
                 qps += float(i[1])
-            num_samples = len(temporal[5:])
+            num_samples = len(temporal[-10:])
             tps /= num_samples
             qps /= num_samples
             latency /= num_samples

@@ -83,8 +83,8 @@ def compute_percentage(default, current):
         default: dict, metrics from default settings
         current: dict, metrics from current settings
     """
-    delta_tps = 100*(current['tps'] - default['tps']) / default['tps']
-    delta_latency = 100*(-current['latency'] + default['latency']) / default['latency']
+    delta_tps = 100*(current[0] - default[0]) / default[0]
+    delta_latency = 100*(-current[1] + default[1]) / default[1]
     return delta_tps, delta_latency
 
 
