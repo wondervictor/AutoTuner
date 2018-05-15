@@ -95,7 +95,7 @@ def generate_knob(action, method):
 
 
 # OUProcess
-origin_sigma = 0.10
+origin_sigma = 0.20
 sigma = origin_sigma
 # decay rate
 sigma_decay_rate = 0.99

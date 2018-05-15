@@ -96,7 +96,8 @@ else:
 max_step = 0
 max_value = 0.0
 generate_knobs = []
-current_state = env.initialize()
+current_state, metrics  = env.initialize()
+print("[Environment Intialize]Tps: {} Lat:{}".format(metrics[0], metrics[1]))
 model.reset(0.1)
 while step_counter < 20:
     state = current_state
@@ -149,7 +150,8 @@ while step_counter < 20:
             ))
 
     if done:
-        current_state = env.initialize()
+        current_state, metrics  = env.initialize()
+        print("[Environment Intialize]Tps: {} Lat:{}".format(metrics[0], metrics[1]))
         model.reset(0.01)
 
 
