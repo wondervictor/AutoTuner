@@ -132,8 +132,8 @@ while step_counter < 20:
 
     _tps, _lat = compute_percentage(default_metrics, metrics)
 
-    logger.info("[{}][Knob Idx: {}] tps increase: {} lat decrease: {}".format(
-        opt.method, step_counter, _tps, _lat
+    logger.info("[{}][Knob Idx: {}] tps increase: {}% lat decrease: {}%".format(
+        opt .method, step_counter, _tps, _lat
     ))
 
     if _tps + _lat > max_score:

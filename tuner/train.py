@@ -177,7 +177,7 @@ if __name__ == '__main__':
                 # sigma = origin_sigma*(sigma_decay_rate ** (step_counter/10))
 
             # save network
-            if step_counter % 50 == 0:
+            if step_counter % 10 == 0:
                 model.save_model('model_params', title='{}_{}'.format(expr_name, step_counter))
 
             if done or score < -50:

@@ -6,6 +6,7 @@ description: MySQL Environment
 import re
 import os
 import time
+import math
 import datetime
 import json
 import threading
@@ -21,6 +22,12 @@ import requests
 # PROJECT_DIR = "/data/"
 TEMP_FILES = "/home/rmw/train_result/tmp/"
 PROJECT_DIR = "/home/rmw/"
+
+
+class Status(object):
+    OK = 'OK'
+    FAIL = 'FAIL'
+    RETRY = 'RETRY'
 
 
 class MySQLEnv(object):
@@ -192,9 +199,9 @@ class MySQLEnv(object):
     def _calculate_reward(delta0, deltat):
 
         if delta0 > 0:
-            _reward = ((1+delta0)**2-1) * (1+deltat)
+            _reward = ((1+delta0)**2-1) * math.fabs(1+deltat)
         else:
-            _reward = - ((1-delta0)**2-1) * (1-deltat)
+            _reward = - ((1-delta0)**2-1) * math.fabs(1-deltat)
         return _reward
 
     def _get_reward(self, external_metrics):
@@ -437,7 +444,7 @@ class TencentServer(MySQLEnv):
         Args:
             knob: dict, mysql parameters
         Returns:
-            flag: whether the setup is valid
+            flag: status, ['OK', 'FAIL', 'RETRY']
         """
         self.steps += 1
         i = 10
@@ -464,7 +471,7 @@ class TencentServer(MySQLEnv):
         max_steps = 500
 
         status = self._get_setup_state(workid=workid)
-        while status in ['running', 'pause', 'paused', 'undoed', 'undo', 'except'] and steps < max_steps:
+        while status in ['running', 'pause', 'paused', 'except'] and steps < max_steps:
             time.sleep(5)
             status = self._get_setup_state(workid=workid)
             steps += 1
@@ -474,8 +481,8 @@ class TencentServer(MySQLEnv):
         if status == 'normal_finish':
             return True
 
-        if status in ['not_start', 'notstart'] or steps > max_steps:
-            time.sleep(10)
+        if status in ['not_start', 'notstart', 'undoed', 'undo'] or steps > max_steps:
+            time.sleep(15)
             params = ''
             for key in knob.keys():
                 params += ' --%s=%s' % (key, knob[key])
