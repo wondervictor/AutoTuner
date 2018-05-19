@@ -11,9 +11,12 @@ import configs
 memory_size = 32*1024*1024*1024
 instance_name = ''
 
+# TODO: Add more knobs
+
 KNOBS = ['skip_name_resolve',               # OFF
          'table_open_cache',                # 2000
          'max_connections',                 # 151
+         # 过大 -100
          'innodb_buffer_pool_size',         # 134217728
          'innodb_buffer_pool_instances',    # 8
          'innodb_log_files_in_group',       # 2
@@ -79,9 +82,11 @@ def gen_continuous(action):
     for idx in xrange(num_knobs):
         name = KNOBS[idx]
         value = KNOB_DETAILS[name]
+
         knob_type = value[0]
         knob_value = value[1]
         min_value = knob_value[0]
+
         if knob_type == 'integer':
             max_val = knob_value[1]
             eval_value = int(max_val * action[idx])
@@ -93,6 +98,8 @@ def gen_continuous(action):
             eval_value = knob_value[enum_index]
 
         if name == 'innodb_log_file_size':
+            # group * size = 32GB
+            # TODO: instance disk size
             max_val = 32 * 1024 * 1024 * 1024 / knobs['innodb_log_files_in_group']
             eval_value = int(max_val * action[idx])
             eval_value = max(eval_value, min_value)

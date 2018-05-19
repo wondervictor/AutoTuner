@@ -456,6 +456,7 @@ class TencentServer(MySQLEnv):
                 print("{}".format(e.message))
             else:
                 break
+            time.sleep(5)
             i -= 1
         if i == -1:
             print("Failed too many times!")

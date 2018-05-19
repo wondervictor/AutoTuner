@@ -123,4 +123,5 @@ result
 eval_result
 # Pickles
 *.pkl
+*.tar.gz
 

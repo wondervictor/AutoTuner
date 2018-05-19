@@ -120,7 +120,9 @@ if __name__ == '__main__':
             state = current_state
             if opt.noisy:
                 model.sample_noise()
+
             action = model.choose_action(state)
+
             if opt.method == 'ddpg':
                 current_knob = generate_knob(action, 'ddpg')
                 logger.info("[ddpg] Action: {}".format(action))
