@@ -7,8 +7,11 @@ desciption: Knob information
 import utils
 import configs
 
-
+TENCENT_URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"
+# 32GB
 memory_size = 32*1024*1024*1024
+# 100GB
+disk_size = 100*1024*1024*1024
 instance_name = ''
 
 # TODO: Add more knobs
@@ -39,9 +42,13 @@ num_knobs = len(KNOBS)
 def init_knobs(instance):
     global instance_name
     global memory_size
+    global disk_size
     global KNOB_DETAILS
     instance_name = instance
-    memory_size = configs.instance_config[instance]['memory']
+    if instance_name.find('tencent') != -1:
+        memory_size, disk_size = utils.get_tencent_instance_info(TENCENT_URL, instance_name)
+    else:
+        memory_size = configs.instance_config[instance]['memory']
 
     KNOB_DETAILS = {
         'skip_name_resolve': ['enum', ['ON', 'OFF']],
@@ -99,8 +106,7 @@ def gen_continuous(action):
 
         if name == 'innodb_log_file_size':
             # group * size = 32GB
-            # TODO: instance disk size
-            max_val = 32 * 1024 * 1024 * 1024 / knobs['innodb_log_files_in_group']
+            max_val = disk_size / knobs['innodb_log_files_in_group']
             eval_value = int(max_val * action[idx])
             eval_value = max(eval_value, min_value)
         knobs[name] = eval_value

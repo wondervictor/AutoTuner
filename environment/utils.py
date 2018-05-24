@@ -6,8 +6,10 @@ description: MySQL Env Utils
 
 import sys
 import time
+import json
 import httplib
 import MySQLdb
+import requests
 import xmlrpclib
 
 from configs import instance_config
@@ -126,6 +128,37 @@ def test_mysql(instance_name):
         return False
     db.close()
     return True
+
+
+def get_tencent_instance_info(url, instance_name):
+    """ get Tencent Instance information
+    Args:
+        url: str, request url
+        instance_name: str, instance_name
+    Return:
+        info: tuple, (mem, disk)
+    Raises:
+        Exception: setup failed
+    """
+    db_info = instance_config[instance_name]
+    instance_id = db_info['instance_id']
+    operator = db_info['operator']
+    data = dict()
+    data["instanceid"] = instance_id
+    data["operator"] = operator
+    para_list = []
+
+    data["para_list"] = para_list
+    data = json.dumps(data)
+    data = "data=" + data
+    r = requests.get(url + '/get_inst_info.cgi', data)
+    response = json.loads(r.text)
+    print(response)
+    # default 32GB
+    mem = int(response.get('mem', 8*1024))*1024*1024
+    # default 100GB
+    disk = int(response.get('disk', 100))*1024*1024*1024
+    return mem, disk
 
 
 def read_machine():
