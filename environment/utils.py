@@ -16,7 +16,6 @@ from configs import instance_config
 from warnings import filterwarnings
 filterwarnings('error', category=MySQLdb.Warning)
 
-
 value_type_metrics = [
     'lock_deadlocks', 'lock_timeouts', 'lock_row_lock_time_max',
     'lock_row_lock_time_avg', 'buffer_pool_size', 'buffer_pool_pages_total',
@@ -24,6 +23,16 @@ value_type_metrics = [
     'buffer_pool_pages_dirty', 'buffer_pool_bytes_dirty', 'buffer_pool_pages_free',
     'trx_rseg_history_len', 'file_num_open_files', 'innodb_page_size'
 ]
+
+
+def time_start():
+    return time.time()
+
+
+def time_end(start):
+    end = time.time()
+    delay = end - start
+    return delay
 
 
 def get_metric_type(metric):
@@ -130,7 +139,7 @@ def test_mysql(instance_name):
     return True
 
 
-def get_tencent_instance_info(url, instance_name):
+def get_tencent_instance_info(instance_name):
     """ get Tencent Instance information
     Args:
         url: str, request url
@@ -143,6 +152,7 @@ def get_tencent_instance_info(url, instance_name):
     db_info = instance_config[instance_name]
     instance_id = db_info['instance_id']
     operator = db_info['operator']
+    url = db_info['server_url']
     data = dict()
     data["instanceid"] = instance_id
     data["operator"] = operator

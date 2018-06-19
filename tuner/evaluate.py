@@ -8,10 +8,10 @@ import sys
 import utils
 import pickle
 import argparse
-import tuner_configs
 sys.path.append('../')
 import models
 import environment
+import numpy as np
 
 
 parser = argparse.ArgumentParser()
@@ -21,16 +21,20 @@ parser.add_argument('--workload', type=str, default='read', help='Workload type 
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
 parser.add_argument('--memory', type=str, default='', help='add replay memory')
+parser.add_argument('--max_steps', type=int, default=20, help='evaluate test steps')
+parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
+parser.add_argument('--batch_size', type=int, default=16, help='Training Batch Size')
 
 opt = parser.parse_args()
 
 # Create Environment
 if opt.tencent:
-    env = environment.TencentServer(wk_type=opt.workload, instance_name=opt.instance, request_url=tuner_configs.TENCENT_URL)
+    env = environment.TencentServer(
+        wk_type=opt.workload,
+        instance_name=opt.instance,
+        num_other_knobs=opt.other_knob)
 else:
     env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
-
-tconfig = tuner_configs.config
 
 # Build models
 if opt.method == 'ddpg':
@@ -40,13 +44,18 @@ if opt.method == 'ddpg':
     ddpg_opt['alr'] = 0.0001
     ddpg_opt['clr'] = 0.0001
     ddpg_opt['model'] = opt.params
-    ddpg_opt['gamma'] = tconfig['gamma']
-    ddpg_opt['batch_size'] = tconfig['batch_size']
-    ddpg_opt['memory_size'] = tconfig['memory_size']
+
+    n_states = 63
+    gamma = 0.99
+    memory_size = 100000
+    num_actions = 16 + opt.other_knob
+    ddpg_opt['gamma'] = gamma
+    ddpg_opt['batch_size'] = opt.batch_size
+    ddpg_opt['memory_size'] = memory_size
 
     model = models.DDPG(
-        n_states=tconfig['num_states'],
-        n_actions=tconfig['num_actions'],
+        n_states=n_states,
+        n_actions=num_actions,
         opt=ddpg_opt,
         mean_var_path='mean_var.pkl',
         ouprocess=True
@@ -69,6 +78,9 @@ logger = utils.Logger(
     name=opt.method,
     log_file='log/{}.log'.format(expr_name)
 )
+
+if opt.other_knob != 0:
+    logger.warn('USE Other Knobs')
 
 # Load mean value and variance
 with open('mean_var.pkl', 'rb') as f:
@@ -111,11 +123,29 @@ max_idx = -1
 generate_knobs = []
 current_state, default_metrics = env.initialize()
 model.reset(0.1)
+
+# time for every step
+step_times = []
+# time for training
+train_step_times = []
+# time for setup, restart, test
+env_step_times = []
+# restart time
+env_restart_times = []
+# choose_action_time
+action_step_times = []
+
 print("[Environment Intialize]Tps: {} Lat:{}".format(default_metrics[0], default_metrics[1]))
 print("------------------- Starting to Test -----------------------")
-while step_counter < 20:
+while step_counter < opt.max_steps:
+    step_time = utils.time_start()
+
     state = current_state
+
+    action_step_time = utils.time_start()
     action = model.choose_action(state)
+    action_step_time = utils.time_end(action_step_time)
+
     if opt.method == 'ddpg':
         current_knob = generate_knob(action, 'ddpg')
         logger.info("[ddpg] Action: {}".format(action))
@@ -124,7 +154,9 @@ while step_counter < 20:
         current_knob = generate_knob(action, 'dqn')
         logger.info("[dqn] Q:{} Action: {}".format(qvalue, action))
 
-    reward, state_, done, score, metrics = env.step(current_knob)
+    env_step_time = utils.time_start()
+    reward, state_, done, score, metrics, restart_time = env.step(current_knob)
+    env_step_time = utils.time_end(env_step_time)
 
     logger.info("[{}][Step: {}][Metric tps:{} lat:{}, qps: {}]Reward: {} Score: {} Done: {}".format(
         opt.method, step_counter, metrics[0], metrics[1], metrics[2], reward, score, done
@@ -156,13 +188,14 @@ while step_counter < 20:
         pickle.dump(generate_knobs, f)
 
     current_state = next_state
-    step_counter += 1
-
-    if len(model.replay_memory) >= tconfig['batch_size']:
+    train_step_time = 0.0
+    if len(model.replay_memory) >= opt.batch_size:
         losses = []
+        train_step_time = utils.time_start()
         for i in xrange(2):
             losses.append(model.update())
             train_step += 1
+        train_step_time = utils.time_end(train_step_time) / 2.0
 
         if opt.method == 'ddpg':
             accumulate_loss[0] += sum([x[0] for x in losses])
@@ -175,6 +208,28 @@ while step_counter < 20:
             logger.info('[{}][Step: {}] Loss: {}'.format(
                 opt.method, step_counter, accumulate_loss / train_step
             ))
+
+    # all_step time
+    step_time = utils.time_end(step_time)
+    step_times.append(step_time)
+    # env_step_time
+    env_step_times.append(env_step_time)
+    # training step time
+    train_step_times.append(train_step_time)
+    # action step times
+    action_step_times.append(action_step_time)
+
+    logger.info("[{}][Step: {}] step: {}s env step: {}s train step: {}s restart time: {}s "
+                "action time: {}s"
+                .format(opt.method, step_counter, step_time, env_step_time, train_step_time, restart_time,
+                        action_step_time))
+
+    logger.info("[{}][Step: {}][Average] step: {}s env step: {}s train step: {}s "
+                "restart time: {}s action time: {}s"
+                .format(opt.method, step_counter, np.mean(step_time), np.mean(env_step_time),
+                        np.mean(train_step_time), np.mean(restart_time), np.mean(action_step_times)))
+
+    step_counter += 1
 
     if done:
         current_state, _ = env.initialize()

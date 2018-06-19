@@ -32,7 +32,7 @@ class Status(object):
 
 class MySQLEnv(object):
 
-    def __init__(self, wk_type='read', alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
+    def __init__(self, wk_type='read', num_other_knobs=0, alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
 
         self.db_info = None
         self.wk_type = wk_type
@@ -47,6 +47,7 @@ class MySQLEnv(object):
         self.beta2 = beta2
         self.time_decay_1 = time_decay1
         self.time_decay_2 = time_decay2
+        self.num_other_knobs = num_other_knobs
 
     @staticmethod
     def _get_external_metrics(path):
@@ -146,9 +147,11 @@ class MySQLEnv(object):
     def step(self, knob):
         """step
         """
+        restart_time = utils.time_start()
         flag = self._apply_knobs(knob)
+        restart_time = utils.time_end(restart_time)
         if not flag:
-            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0, 0]
+            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0, 0], restart_time
 
         external_metrics, internal_metrics = self._get_state()
         reward = self._get_reward(external_metrics)
@@ -160,7 +163,7 @@ class MySQLEnv(object):
             metrics=external_metrics,
             knob_file='%sAutoTuner/tuner/save_knobs/knob_metric.txt' % PROJECT_DIR
         )
-        return reward, next_state, terminate, self.score, external_metrics
+        return reward, next_state, terminate, self.score, external_metrics, restart_time
 
     def setting(self, knob):
         self._apply_knobs(knob)
@@ -324,9 +327,8 @@ DockerServer = Server
 class TencentServer(MySQLEnv):
     """ Build an environment in Tencent Cloud
     """
-    URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"
 
-    def __init__(self, wk_type, instance_name, request_url):
+    def __init__(self, wk_type, instance_name, num_other_knobs=0):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
@@ -341,9 +343,9 @@ class TencentServer(MySQLEnv):
         self.last_external_metrics = None
         self.instance_name = instance_name
         self.db_info = configs.instance_config[instance_name]
-        self.url = request_url
+        self.url = self.db_info['server_url']
         self.alpha = 1.0
-        knobs.init_knobs(instance_name)
+        knobs.init_knobs(instance_name, num_other_knobs)
         self.default_knobs = knobs.get_init_knobs()
 
     def _set_params(self, knob):

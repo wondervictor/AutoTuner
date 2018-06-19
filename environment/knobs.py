@@ -7,7 +7,6 @@ desciption: Knob information
 import utils
 import configs
 
-TENCENT_URL = "http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api"
 # 32GB
 memory_size = 32*1024*1024*1024
 # 100GB
@@ -15,6 +14,14 @@ disk_size = 100*1024*1024*1024
 instance_name = ''
 
 # TODO: Add more knobs
+
+# TODO: ADD Knobs HERE! Format is the same as the KNOB_DETAILS
+EXTENDED_KNOBS = {
+
+
+
+}
+
 
 KNOBS = ['skip_name_resolve',               # OFF
          'table_open_cache',                # 2000
@@ -39,16 +46,16 @@ KNOB_DETAILS = None
 num_knobs = len(KNOBS)
 
 
-def init_knobs(instance):
+def init_knobs(instance, num_more_knobs):
     global instance_name
     global memory_size
     global disk_size
     global KNOB_DETAILS
     instance_name = instance
     if instance_name.find('tencent') != -1:
-        memory_size, disk_size = utils.get_tencent_instance_info(TENCENT_URL, instance_name)
+        memory_size, disk_size = utils.get_tencent_instance_info(instance_name)
     else:
-        memory_size = configs.instance_config[instance]['memory']
+        memory_size = configs.instance_config[instance_name]['memory']
 
     KNOB_DETAILS = {
         'skip_name_resolve': ['enum', ['ON', 'OFF']],
@@ -68,6 +75,13 @@ def init_knobs(instance):
         'max_binlog_size': ['integer', [4096, 1073741824, 1073741824]],
         'binlog_format': ['enum', ['ROW', 'MIXED']],
     }
+
+    # ADD Other Knobs, NOT Random Selected
+    i = 0
+    while i < num_more_knobs:
+        for k, v in EXTENDED_KNOBS.items():
+            KNOB_DETAILS[k] = v
+        i += 1
 
     print("Instance: %s Memory: %s" % (instance_name, memory_size))
 

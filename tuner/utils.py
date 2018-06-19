@@ -6,6 +6,16 @@ import logging
 import datetime
 
 
+def time_start():
+    return time.time()
+
+
+def time_end(start):
+    end = time.time()
+    delay = end - start
+    return delay
+
+
 def get_timestamp():
     """
     获取UNIX时间戳

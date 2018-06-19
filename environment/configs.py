@@ -23,6 +23,7 @@ instance_config = {
     },
 
     'tencent1': {
+        'server_url': 'http://10.182.27.175:8080/cdb2/fun_logic/cgi-bin/public_api',
         'instance_id': '0647235a-4f92-11e8-8b5a-80fb06afab26',
         'host': '100.121.150.87',
         'port': 20120,
