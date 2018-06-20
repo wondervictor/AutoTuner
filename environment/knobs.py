@@ -10,7 +10,7 @@ import configs
 # 32GB
 memory_size = 32*1024*1024*1024
 # 100GB
-disk_size = 100*1024*1024*1024
+disk_size = 32*1024*1024*1024
 instance_name = ''
 
 # TODO: Add more knobs
@@ -52,8 +52,13 @@ def init_knobs(instance, num_more_knobs):
     global disk_size
     global KNOB_DETAILS
     instance_name = instance
-    if instance_name.find('tencent') != -1:
-        memory_size, disk_size = utils.get_tencent_instance_info(instance_name)
+    # TODO: Test the request
+    use_request = True
+    if use_request:
+        if instance_name.find('tencent') != -1:
+            memory_size, disk_size = utils.get_tencent_instance_info(instance_name)
+        else:
+           memory_size = configs.instance_config[instance_name]['memory']
     else:
         memory_size = configs.instance_config[instance_name]['memory']
 

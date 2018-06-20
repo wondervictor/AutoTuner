@@ -23,7 +23,7 @@ parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm
 parser.add_argument('--memory', type=str, default='', help='add replay memory')
 parser.add_argument('--max_steps', type=int, default=20, help='evaluate test steps')
 parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
-parser.add_argument('--batch_size', type=int, default=16, help='Training Batch Size')
+parser.add_argument('--batch_size', type=int, default=2, help='Training Batch Size')
 
 opt = parser.parse_args()
 
@@ -41,8 +41,8 @@ if opt.method == 'ddpg':
 
     ddpg_opt = dict()
     ddpg_opt['tau'] = 0.001
-    ddpg_opt['alr'] = 0.0001
-    ddpg_opt['clr'] = 0.0001
+    ddpg_opt['alr'] = 0.00001
+    ddpg_opt['clr'] = 0.00001
     ddpg_opt['model'] = opt.params
 
     n_states = 63

@@ -205,6 +205,8 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * math.fabs(1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * math.fabs(1-deltat)
+        if _reward and deltat < 0:
+            _reward = 0
         return _reward
 
     def _get_reward(self, external_metrics):
@@ -332,7 +334,6 @@ class TencentServer(MySQLEnv):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
-            request_url: str, http request URL
         """
         MySQLEnv.__init__(self, wk_type)
         # super(MySQLEnv, self).__init__()

@@ -163,9 +163,10 @@ def get_tencent_instance_info(instance_name):
     data = "data=" + data
     r = requests.get(url + '/get_inst_info.cgi', data)
     response = json.loads(r.text)
+    print data
     print(response)
     # default 32GB
-    mem = int(response.get('mem', 8*1024))*1024*1024
+    mem = int(response.get('mem', 12*1024))*1024*1024
     # default 100GB
     disk = int(response.get('disk', 100))*1024*1024*1024
     return mem, disk
