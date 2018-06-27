@@ -34,6 +34,7 @@ if __name__ == '__main__':
     parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
     parser.add_argument('--batch_size', type=int, default=16, help='Training Batch Size')
     parser.add_argument('--epoches', type=int, default=100, help='Training Epoches')
+    parser.add_argument('--benchmark', type=str, default='sysbench', help='[sysbench, tpcc]')
 
     opt = parser.parse_args()
 
@@ -42,6 +43,7 @@ if __name__ == '__main__':
         env = environment.TencentServer(
             wk_type=opt.workload,
             instance_name=opt.instance,
+            method=opt.benchmark,
             num_other_knobs=opt.other_knob)
     else:
         env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)

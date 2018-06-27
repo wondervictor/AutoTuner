@@ -24,6 +24,7 @@ parser.add_argument('--memory', type=str, default='', help='add replay memory')
 parser.add_argument('--max_steps', type=int, default=50, help='evaluate test steps')
 parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
 parser.add_argument('--batch_size', type=int, default=2, help='Training Batch Size')
+parser.add_argument('--benchmark', type=str, default='sysbench', help='[sysbench, tpcc]')
 
 opt = parser.parse_args()
 
@@ -32,6 +33,7 @@ if opt.tencent:
     env = environment.TencentServer(
         wk_type=opt.workload,
         instance_name=opt.instance,
+        method=opt.benchmark,
         num_other_knobs=opt.other_knob)
 else:
     env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
