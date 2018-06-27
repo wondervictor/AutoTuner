@@ -18,10 +18,10 @@ import knobs
 import requests
 
 
-# TEMP_FILES = "/data/AutoTuner/train_result/tmp/"
-# PROJECT_DIR = "/data/"
-TEMP_FILES = "/home/rmw/train_result/tmp/"
-PROJECT_DIR = "/home/rmw/"
+TEMP_FILES = "/data/AutoTuner/train_result/tmp/"
+PROJECT_DIR = "/data/"
+# TEMP_FILES = "/home/rmw/train_result/tmp/"
+# PROJECT_DIR = "/home/rmw/"
 
 
 class Status(object):
@@ -32,7 +32,7 @@ class Status(object):
 
 class MySQLEnv(object):
 
-    def __init__(self, wk_type='read', num_other_knobs=0, alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
+    def __init__(self, wk_type='read', method='sysbench', num_other_knobs=0, alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
 
         self.db_info = None
         self.wk_type = wk_type
@@ -42,6 +42,7 @@ class MySQLEnv(object):
         self.last_external_metrics = None
         self.default_externam_metrics = None
 
+        self.method = method
         self.alpha = alpha
         self.beta1 = beta1
         self.beta2 = beta2
@@ -50,9 +51,28 @@ class MySQLEnv(object):
         self.num_other_knobs = num_other_knobs
 
     @staticmethod
-    def _get_external_metrics(path):
+    def _get_external_metrics(path, method='sysbench'):
 
-        def parse_sysbench_new(file_path):
+        def parse_tpcc(file_path):
+            with open(file_path) as f:
+                lines = f.read()
+            temporal_pattern = re.compile(".*?trx: (\d+.\d+), 95%: (\d+.\d+), 99%: (\d+.\d+), max_rt:.*?")
+            temporal = temporal_pattern.findall(lines)
+            tps = 0
+            latency = 0
+            qps = 0
+
+            for i in temporal[-20:]:
+                tps += float(i[0])
+                latency += float(i[2])
+            num_samples = len(temporal[-20:])
+            tps /= num_samples
+            latency /= num_samples
+            # interval
+            tps /= 5
+            return [tps, latency, tps]
+
+        def parse_sysbench(file_path):
             with open(file_path) as f:
                 lines = f.read()
             temporal_pattern = re.compile(
@@ -73,8 +93,12 @@ class MySQLEnv(object):
             latency /= num_samples
             return [tps, latency, qps]
 
-        result = parse_sysbench_new(path)
-
+        if method == 'sysbench':
+            result = parse_sysbench(path)
+        elif method == 'tpcc':
+            result = parse_tpcc(path)
+        else:
+            result = parse_sysbench(path)
         return result
 
     def _get_internal_metrics(self, internal_metrics):
@@ -140,7 +164,7 @@ class MySQLEnv(object):
         if not flag:
             return {"tps": 0, "latency": 0}
 
-        external_metrics, _ = self._get_state()
+        external_metrics, _ = self._get_state(method=self.method)
         return {"tps": external_metrics[0],
                 "latency": external_metrics[1]}
 
@@ -153,7 +177,7 @@ class MySQLEnv(object):
         if not flag:
             return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0, 0], restart_time
 
-        external_metrics, internal_metrics = self._get_state()
+        external_metrics, internal_metrics = self._get_state(method=self.method)
         reward = self._get_reward(external_metrics)
         self.last_external_metrics = external_metrics
         next_state = internal_metrics
@@ -168,7 +192,7 @@ class MySQLEnv(object):
     def setting(self, knob):
         self._apply_knobs(knob)
 
-    def _get_state(self):
+    def _get_state(self, method='sysbench'):
         """Collect the Internal State and External State
         """
         filename = TEMP_FILES
@@ -179,16 +203,24 @@ class MySQLEnv(object):
         internal_metrics = []
         self._get_internal_metrics(internal_metrics)
 
-        os.system("bash %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
-                                                                               self.wk_type,
-                                                                               self.db_info['host'],
-                                                                               self.db_info['port'],
-                                                                               self.db_info['passwd'],
-                                                                               filename))
+        if method == 'sysbench':
 
-        time.sleep(10)
+            os.system("bash %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
+                                                                                   self.wk_type,
+                                                                                   self.db_info['host'],
+                                                                                   self.db_info['port'],
+                                                                                   self.db_info['passwd'],
+                                                                                   filename))
+            time.sleep(10)
+        elif method == 'tpcc':
+            os.system('bash %sAutoTuner/scripts/run_tpcc.sh %s %d %s %s' % (PROJECT_DIR,
+                                                                            self.db_info['host'],
+                                                                            self.db_info['port'],
+                                                                            self.db_info['passwd'],
+                                                                            filename))
+            time.sleep(10)
 
-        external_metrics = self._get_external_metrics(filename)
+        external_metrics = self._get_external_metrics(filename, method)
         internal_metrics = self._post_handle(internal_metrics)
 
         return external_metrics, internal_metrics
@@ -205,7 +237,7 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * math.fabs(1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * math.fabs(1-deltat)
-        if _reward and deltat < 0:
+        if _reward > 0 and deltat < 0:
             _reward = 0
         return _reward
 
@@ -252,7 +284,7 @@ class Server(MySQLEnv):
         self.db_info = configs.instance_config[instance_name]
         self.server_ip = self.db_info['host']
         self.alpha = 1.0
-        knobs.init_knobs(instance_name)
+        knobs.init_knobs(instance_name, num_more_knobs=0)
         self.default_knobs = knobs.get_init_knobs()
 
     def initialize(self):
@@ -273,7 +305,7 @@ class Server(MySQLEnv):
             if i >= 5:
                 print("Initialize: {} times ....".format(i))
 
-        external_metrics, internal_metrics = self._get_state()
+        external_metrics, internal_metrics = self._get_state(method=self.method)
         self.last_external_metrics = external_metrics
         self.default_externam_metrics = external_metrics
         state = internal_metrics
@@ -330,7 +362,7 @@ class TencentServer(MySQLEnv):
     """ Build an environment in Tencent Cloud
     """
 
-    def __init__(self, wk_type, instance_name, num_other_knobs=0):
+    def __init__(self, wk_type, instance_name, method='sysbench', num_other_knobs=0):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
@@ -346,6 +378,7 @@ class TencentServer(MySQLEnv):
         self.db_info = configs.instance_config[instance_name]
         self.url = self.db_info['server_url']
         self.alpha = 1.0
+        self.method = method
         knobs.init_knobs(instance_name, num_other_knobs)
         self.default_knobs = knobs.get_init_knobs()
 
@@ -430,7 +463,7 @@ class TencentServer(MySQLEnv):
             if i >= 5:
                 print("Initialize: {} times ....".format(i))
 
-        external_metrics, internal_metrics = self._get_state()
+        external_metrics, internal_metrics = self._get_state(method=self.method)
         self.last_external_metrics = external_metrics
         self.default_externam_metrics = external_metrics
 

@@ -21,7 +21,7 @@ parser.add_argument('--workload', type=str, default='read', help='Workload type 
 parser.add_argument('--instance', type=str, default='mysql1', help='Choose MySQL Instance')
 parser.add_argument('--method', type=str, default='ddpg', help='Choose Algorithm to solve [`ddpg`,`dqn`]')
 parser.add_argument('--memory', type=str, default='', help='add replay memory')
-parser.add_argument('--max_steps', type=int, default=20, help='evaluate test steps')
+parser.add_argument('--max_steps', type=int, default=50, help='evaluate test steps')
 parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
 parser.add_argument('--batch_size', type=int, default=2, help='Training Batch Size')
 

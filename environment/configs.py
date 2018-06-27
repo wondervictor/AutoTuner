@@ -31,6 +31,16 @@ instance_config = {
         'user': 'root',
         'operator': 'zakijzhang',
         'memory': 12884901888
+    },
+    'tencent2': {
+        'server_url': 'http://10.249.84.215:8080/cdb2/fun_logic/cgi-bin/public_api',
+        'instance_id': '5130c91f-75f0-11e8-8728-283152b07750',
+        'host': '100.121.150.87',
+        'port': 20132,
+        'passwd': '123456',
+        'user': 'root',
+        'operator': 'zakijzhang',
+        'memory': 12884901888
     }
 
 }

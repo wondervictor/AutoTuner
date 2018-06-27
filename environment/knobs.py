@@ -10,7 +10,7 @@ import configs
 # 32GB
 memory_size = 32*1024*1024*1024
 # 100GB
-disk_size = 32*1024*1024*1024
+disk_size = 100*1024*1024*1024
 instance_name = ''
 
 # TODO: Add more knobs

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-script_path="/home/rmw/sysbench-1.0/src/lua/"
-# script_path="/usr/share/sysbench/"
+# script_path="/home/rmw/sysbench-1.0/src/lua/"
+script_path="/usr/share/sysbench/"
 
 if [ "${1}" == "read" ]
 then
@@ -20,9 +20,9 @@ sysbench ${run_script} \
 	--mysql-password=$4 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
-	--tables=8 \
-	--table-size=5000000 \
-	--report-interval=3 \
-	--threads=100 \
+	--tables=16 \
+	--table-size=20000000 \
+	--report-interval=5 \
+	--threads=1000 \
 	--time=150 \
 	run >> $5
