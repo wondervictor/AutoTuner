@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=16, help='Training Batch Size')
     parser.add_argument('--epoches', type=int, default=100, help='Training Epoches')
     parser.add_argument('--benchmark', type=str, default='sysbench', help='[sysbench, tpcc]')
+    parser.add_argument('--metric_num', type=int, default=63, help='metric nums')
 
     opt = parser.parse_args()
 
@@ -44,6 +45,7 @@ if __name__ == '__main__':
             wk_type=opt.workload,
             instance_name=opt.instance,
             method=opt.benchmark,
+            num_metric=opt.metric_num,
             num_other_knobs=opt.other_knob)
     else:
         env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
@@ -56,7 +58,7 @@ if __name__ == '__main__':
         ddpg_opt['alr'] = 0.0005
         ddpg_opt['clr'] = 0.0001
         ddpg_opt['model'] = opt.params
-        n_states = 63
+        n_states = opt.metric_num
         gamma = 0.99
         memory_size = 100000
         num_actions = 16 + opt.other_knob

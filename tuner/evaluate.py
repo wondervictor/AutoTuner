@@ -25,6 +25,7 @@ parser.add_argument('--max_steps', type=int, default=50, help='evaluate test ste
 parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
 parser.add_argument('--batch_size', type=int, default=2, help='Training Batch Size')
 parser.add_argument('--benchmark', type=str, default='sysbench', help='[sysbench, tpcc]')
+parser.add_argument('--metric_num', type=int, default=63, help='metric nums')
 
 opt = parser.parse_args()
 
@@ -34,6 +35,7 @@ if opt.tencent:
         wk_type=opt.workload,
         instance_name=opt.instance,
         method=opt.benchmark,
+        num_metric=opt.metric_num,
         num_other_knobs=opt.other_knob)
 else:
     env = environment.Server(wk_type=opt.workload, instance_name=opt.instance)
@@ -47,7 +49,7 @@ if opt.method == 'ddpg':
     ddpg_opt['clr'] = 0.00001
     ddpg_opt['model'] = opt.params
 
-    n_states = 63
+    n_states = opt.metric_num
     gamma = 0.99
     memory_size = 100000
     num_actions = 16 + opt.other_knob

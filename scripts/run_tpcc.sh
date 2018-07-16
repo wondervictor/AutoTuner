@@ -13,4 +13,4 @@
 # -i: report interval
 # -f: report file name
 
-tpcc_start -h${1} -d -P ${2} tpcc_test -uroot -p${3} -w 1000 -c 1000 -r 20 -l 100 -i 5 >> $4
+tpcc_start -h${1} -d tpcc_test -P ${2} -uroot -p${3} -w 1000 -c 1000 -r 20 -l 100 -i 5 >> $4

@@ -16,7 +16,7 @@ import configs
 import utils
 import knobs
 import requests
-
+import psutil
 
 TEMP_FILES = "/data/AutoTuner/train_result/tmp/"
 PROJECT_DIR = "/data/"
@@ -32,7 +32,7 @@ class Status(object):
 
 class MySQLEnv(object):
 
-    def __init__(self, wk_type='read', method='sysbench', num_other_knobs=0, alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
+    def __init__(self, wk_type='read', method='sysbench', num_other_knobs=0, num_metric=63, alpha=1.0, beta1=0.5, beta2=0.5, time_decay1=1.0, time_decay2=1.0):
 
         self.db_info = None
         self.wk_type = wk_type
@@ -49,6 +49,7 @@ class MySQLEnv(object):
         self.time_decay_1 = time_decay1
         self.time_decay_2 = time_decay2
         self.num_other_knobs = num_other_knobs
+        self.num_metric = num_metric
 
     @staticmethod
     def _get_external_metrics(path, method='sysbench'):
@@ -62,14 +63,14 @@ class MySQLEnv(object):
             latency = 0
             qps = 0
 
-            for i in temporal[-20:]:
+            for i in temporal[-10:]:
                 tps += float(i[0])
                 latency += float(i[2])
-            num_samples = len(temporal[-20:])
+            num_samples = len(temporal[-10:])
             tps /= num_samples
             latency /= num_samples
             # interval
-            tps /= 5
+            tps /= 1
             return [tps, latency, tps]
 
         def parse_sysbench(file_path):
@@ -110,7 +111,7 @@ class MySQLEnv(object):
         """
         _counter = 0
         _period = 5
-        count = 12
+        count = 160/5
 
         def collect_metric(counter):
             counter += 1
@@ -128,9 +129,8 @@ class MySQLEnv(object):
 
         return internal_metrics
 
-    @staticmethod
-    def _post_handle(metrics):
-        result = np.zeros(63)
+    def _post_handle(self, metrics):
+        result = np.zeros(self.num_metric)
 
         def do(metric_name, metric_values):
             metric_type = utils.get_metric_type(metric_name)
@@ -138,14 +138,15 @@ class MySQLEnv(object):
                 return float(metric_values[-1] - metric_values[0])
             else:
                 return float(sum(metric_values))/len(metric_values)
-
+        if len(metrics) == 0:
+            return None
         keys = metrics[0].keys()
+
         keys.sort()
         for idx in xrange(len(keys)):
             key = keys[idx]
             data = [x[key] for x in metrics]
             result[idx] = do(key, data)
-
         return result
 
     def initialize(self):
@@ -175,9 +176,14 @@ class MySQLEnv(object):
         flag = self._apply_knobs(knob)
         restart_time = utils.time_end(restart_time)
         if not flag:
-            return -100.0, np.array([0] * 63), True, self.score - 100, [0, 0, 0], restart_time
+            return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
+        s = self._get_state(method=self.method)
+        if s is None:
+            return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
+        external_metrics, internal_metrics = s
+        if internal_metrics is None:
+            return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
 
-        external_metrics, internal_metrics = self._get_state(method=self.method)
         reward = self._get_reward(external_metrics)
         self.last_external_metrics = external_metrics
         next_state = internal_metrics
@@ -204,15 +210,35 @@ class MySQLEnv(object):
         self._get_internal_metrics(internal_metrics)
 
         if method == 'sysbench':
-
+            a = time.time()
             os.system("bash %sAutoTuner/scripts/run_sysbench.sh %s %s %d %s %s" % (PROJECT_DIR,
                                                                                    self.wk_type,
                                                                                    self.db_info['host'],
                                                                                    self.db_info['port'],
                                                                                    self.db_info['passwd'],
                                                                                    filename))
+            a = time.time() - a
+            if a < 50:
+                return None
             time.sleep(10)
         elif method == 'tpcc':
+            def kill_tpcc():
+                def _filter_pid(x):
+                    try:
+                        x = psutil.Process(x)
+                        if x.name() == 'tpcc_start':
+                            return True
+                        return False
+                    except:
+                        return False
+                pids = psutil.pids()
+                tpcc_pid = filter(_filter_pid, pids)
+                print tpcc_pid
+                for tpcc_pid_i in tpcc_pid:
+                    os.system('kill %s' % tpcc_pid_i)
+
+            timer = threading.Timer(170, kill_tpcc)
+            timer.start()
             os.system('bash %sAutoTuner/scripts/run_tpcc.sh %s %d %s %s' % (PROJECT_DIR,
                                                                             self.db_info['host'],
                                                                             self.db_info['port'],
@@ -237,6 +263,7 @@ class MySQLEnv(object):
             _reward = ((1+delta0)**2-1) * math.fabs(1+deltat)
         else:
             _reward = - ((1-delta0)**2-1) * math.fabs(1-deltat)
+
         if _reward > 0 and deltat < 0:
             _reward = 0
         return _reward
@@ -362,7 +389,7 @@ class TencentServer(MySQLEnv):
     """ Build an environment in Tencent Cloud
     """
 
-    def __init__(self, wk_type, instance_name, method='sysbench', num_other_knobs=0):
+    def __init__(self, wk_type, instance_name, method='sysbench', num_metric=63, num_other_knobs=0):
         """Initialize `TencentServer` Class
         Args:
             instance_name: str, mysql instance name, get the database infomation
@@ -371,6 +398,7 @@ class TencentServer(MySQLEnv):
         # super(MySQLEnv, self).__init__()
         self.wk_type = wk_type
         self.score = 0.0
+        self.num_metric = num_metric
         self.steps = 0
         self.terminate = False
         self.last_external_metrics = None
