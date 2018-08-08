@@ -33,10 +33,10 @@ if __name__ == '__main__':
     parser.add_argument('--noisy', action='store_true', help='use noisy linear layer')
     parser.add_argument('--other_knob', type=int, default=0, help='Number of other knobs')
     parser.add_argument('--batch_size', type=int, default=16, help='Training Batch Size')
-    parser.add_argument('--epoches', type=int, default=100, help='Training Epoches')
+    parser.add_argument('--epoches', type=int, default=5000000, help='Training Epoches')
     parser.add_argument('--benchmark', type=str, default='sysbench', help='[sysbench, tpcc]')
     parser.add_argument('--metric_num', type=int, default=63, help='metric nums')
-
+    parser.add_argument('--default_knobs', type=int, default=6, help='default knobs')
     opt = parser.parse_args()
 
     # Create Environment
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         n_states = opt.metric_num
         gamma = 0.99
         memory_size = 100000
-        num_actions = 16 + opt.other_knob
+        num_actions = opt.default_knobs + opt.other_knob
         ddpg_opt['gamma'] = gamma
         ddpg_opt['batch_size'] = opt.batch_size
         ddpg_opt['memory_size'] = memory_size
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     current_knob = environment.get_init_knobs()
 
     # OUProcess
-    origin_sigma = 0.10
+    origin_sigma = 0.20
     sigma = origin_sigma
     # decay rate
     sigma_decay_rate = 0.99

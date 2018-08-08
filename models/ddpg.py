@@ -4,6 +4,7 @@ Deep Deterministic Policy Gradient Model
 
 """
 
+import os
 import math
 import torch
 import pickle
@@ -147,6 +148,19 @@ class Actor(nn.Module):
             nn.Linear(128, 128),
             nn.Tanh(),
             nn.Dropout(0.3),
+            #....................
+            #nn.Linear(128, 128),
+            #nn.Tanh(),
+            #nn.Dropout(0.3),
+
+            #nn.Linear(128, 128),
+            #nn.Tanh(),
+            #nn.Dropout(0.3),
+
+            #nn.Linear(128, 128),
+            #nn.Tanh(),
+            #nn.Dropout(0.3),
+            #....................
             nn.Linear(128, 64),
             nn.Tanh(),
             nn.BatchNorm1d(64),
@@ -185,6 +199,20 @@ class Critic(nn.Module):
             nn.Linear(256, 256),
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(256),
+
+            #.......................
+            #nn.Linear(256, 256),
+            #nn.LeakyReLU(negative_slope=0.2),
+            #nn.BatchNorm1d(256),
+
+            #nn.Linear(256, 256),
+            #nn.LeakyReLU(negative_slope=0.2),
+            #nn.BatchNorm1d(256),
+
+            #nn.Linear(256, 256),
+            #nn.LeakyReLU(negative_slope=0.2),
+            #nn.BatchNorm1d(256),
+            #.......................
             nn.Linear(256, 64),
             nn.Tanh(),
             nn.Dropout(0.3),
@@ -235,7 +263,11 @@ class DDPG(object):
         self.gamma = opt['gamma']
         self.tau = opt['tau']
         self.ouprocess = ouprocess
+
         if mean_var_path is None:
+            mean = np.zeros(n_states)
+            var = np.zeros(n_states)
+        elif not os.path.exists(mean_var_path):
             mean = np.zeros(n_states)
             var = np.zeros(n_states)
         else:

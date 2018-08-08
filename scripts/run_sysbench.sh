@@ -20,9 +20,13 @@ sysbench ${run_script} \
 	--mysql-password=$4 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
-	--tables=16 \
-	--table-size=20000000 \
+    --mysql-storage-engine=innodb \
+    --range-size=100 \
+    --events=0 \
+    --rand-type=uniform \
+	--tables=200 \
+	--table-size=10000000 \
 	--report-interval=5 \
-	--threads=1000 \
-	--time=150 \
-	run >> $5
+	--threads=256 \
+	--time=$5 \
+	run >> $6

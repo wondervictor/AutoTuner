@@ -19,7 +19,6 @@ import requests
 import psutil
 
 TEMP_FILES = "/root/data/AutoTuner/train_result/tmp/"
-BEST_NOW = "/root/data/AutoTuner/tuner/"
 PROJECT_DIR = "/root/data/"
 # TEMP_FILES = "/home/rmw/train_result/tmp/"
 # PROJECT_DIR = "/home/rmw/"
@@ -168,45 +167,10 @@ class MySQLEnv(object):
         external_metrics, _ = self._get_state(knob, method=self.method)
         return {"tps": external_metrics[0],
                 "latency": external_metrics[1]}
-    def _get_best_now(self, filename):
-        with open(BEST_NOW  + filename) as f:
-            lines = f.readlines()
-        best_now = lines[0].split(',')
-        return [float(best_now[0]), float(best_now[1]), float(best_now[0])]
-
-    def record_best(self, external_metrics):
-        filename = 'bestnow.log'
-        best_flag = False
-        if os.path.exists( BEST_NOW  + filename):
-            tps_best = external_metrics[0]
-            lat_best = external_metrics[1]
-            rate = 0
-            if int(lat_best) != 0:
-                rate = float(tps_best)/lat_best
-                with open(BEST_NOW  + filename) as f:
-                    lines = f.readlines()
-                best_now = lines[0].split(',')
-                rate_best_now = float(best_now[0])/float(best_now[1])
-                if rate > rate_best_now:
-                    best_flag = True
-                    with open(BEST_NOW  + filename, 'w') as f:
-                        f.write(str(tps_best) + ',' + str(lat_best) + ',' + str(rate))
-        else:
-            file = open(BEST_NOW  + filename, 'wr')
-            tps_best = external_metrics[0]
-            lat_best = external_metrics[1]
-            rate = 0
-            if int(lat_best) == 0 :
-                rate = 0
-            else:
-                rate = float(tps_best)/lat_best
-            file.write(str(tps_best) + ',' + str(lat_best) + ',' + str(rate))
-        return best_flag
 
     def step(self, knob):
         """step
         """
-        filename = 'bestnow.log'
         restart_time = utils.time_start()
         flag = self._apply_knobs(knob)
         restart_time = utils.time_end(restart_time)
@@ -216,17 +180,8 @@ class MySQLEnv(object):
         if s is None:
             return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
         external_metrics, internal_metrics = s
-
         reward = self._get_reward(external_metrics)
-        flag = self.record_best(external_metrics)
-        if flag == True:
-            print('Better performance changed!')
-        else:
-            print('Performance remained!')
-        #get the best performance so far to calculate the reward
-        best_now_performance = self._get_best_now(filename)
-        self.last_external_metrics = best_now_performance
-
+        self.last_external_metrics = external_metrics
         next_state = internal_metrics
         terminate = self._terminate()
         knobs.save_knobs(
@@ -238,7 +193,7 @@ class MySQLEnv(object):
 
     def setting(self, knob):
         self._apply_knobs(knob)
-    
+
     def _get_state(self, knob, method='sysbench'):
         """Collect the Internal State and External State
         """
@@ -321,11 +276,7 @@ class MySQLEnv(object):
         Return:
             reward: float, a scalar reward
         """
-        print('*****************************')
-        print(external_metrics)
-        print(self.default_externam_metrics)
-        print(self.last_external_metrics)
-        print('*****************************')
+
         # tps
         delta_0_tps = float((external_metrics[0] - self.default_externam_metrics[0]))/self.default_externam_metrics[0]
         delta_t_tps = float((external_metrics[0] - self.last_external_metrics[0]))/self.last_external_metrics[0]
@@ -337,14 +288,9 @@ class MySQLEnv(object):
         delta_t_lat = float((-external_metrics[1] + self.last_external_metrics[1])) / self.last_external_metrics[1]
 
         lat_reward = self._calculate_reward(delta_0_lat, delta_t_lat)
-        
+
         reward = tps_reward * 0.4 + 0.6 * lat_reward
         self.score += reward
-        print('$$$$$$$$$$$$$$$$$$$$$$')
-        print(tps_reward)
-        print(lat_reward)
-        print(reward)
-        print('$$$$$$$$$$$$$$$$$$$$$$')
         return reward
 
     def _terminate(self):
@@ -536,7 +482,6 @@ class TencentServer(MySQLEnv):
         Returns:
             state: np.array, current state
         """
-        filename = 'bestnow.log'
         self.score = 0.0
         self.last_external_metrics = []
         self.steps = 0
@@ -551,14 +496,7 @@ class TencentServer(MySQLEnv):
                 print("Initialize: {} times ....".format(i))
 
         external_metrics, internal_metrics = self._get_state(knob = self.default_knobs, method=self.method)
-        if os.path.exists(BEST_NOW + filename):
-            if os.path.getsize(BEST_NOW + filename):
-                with open(BEST_NOW  + filename) as f:
-                    lines = f.readlines()
-                best_now = lines[0].split(',')
-                self.last_external_metrics = [float(best_now[0]), float(best_now[1]), float(best_now[0])]
-        else:
-            self.last_external_metrics = external_metrics
+        self.last_external_metrics = external_metrics
         self.default_externam_metrics = external_metrics
 
         state = internal_metrics
