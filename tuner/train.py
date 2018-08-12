@@ -169,13 +169,7 @@ if __name__ == '__main__':
 
             next_state = state_
 
-            model.replay_memory.push(
-                state=state,
-                reward=reward,
-                action=action,
-                next_state=next_state,
-                terminate=done
-            )
+            model.add_sample(state, action,reward, next_state, done)
 
             if reward > 10:
                 fine_state_actions.append((state, action))

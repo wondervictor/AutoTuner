@@ -177,13 +177,7 @@ while step_counter < opt.max_steps:
         max_idx = step_counter
 
     next_state = state_
-    model.replay_memory.push(
-        state=state,
-        reward=reward,
-        action=action,
-        next_state=next_state,
-        terminate=done
-    )
+    model.add_sample(state, action, reward, next_state, done)
 
     # {"tps_inc":xxx, "lat_dec": xxx, "metrics": xxx, "knob": xxx}
     generate_knobs.append({"tps_inc": _tps, "lat_dec": _lat, "metrics": metrics, "knob": current_knob})
