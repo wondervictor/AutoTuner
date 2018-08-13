@@ -14,16 +14,16 @@ else
 fi
 
 sysbench ${run_script} \
-    --mysql-host=$2 \
+        --mysql-host=$2 \
 	--mysql-port=$3 \
 	--mysql-user=root \
 	--mysql-password=$4 \
 	--mysql-db=sbtest \
 	--db-driver=mysql \
-    --mysql-storage-engine=innodb \
-    --range-size=100 \
-    --events=0 \
-    --rand-type=uniform \
+        --mysql-storage-engine=innodb \
+        --range-size=100 \
+        --events=0 \
+        --rand-type=uniform \
 	--tables=200 \
 	--table-size=10000000 \
 	--report-interval=5 \
