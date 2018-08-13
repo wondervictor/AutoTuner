@@ -79,6 +79,9 @@ class PrioritizedReplayMemory(object):
         p = self._get_priority(error)
         self.tree.add(p, sample)
 
+    def __len__(self):
+        return self.tree.num_entries
+
     def sample(self, n):
         batch = []
         idxs = []
