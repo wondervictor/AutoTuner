@@ -4,6 +4,7 @@
 Prioritized Replay Memory
 """
 import random
+import pickle
 import numpy as np
 
 
@@ -108,4 +109,14 @@ class PrioritizedReplayMemory(object):
     def update(self, idx, error):
         p = self._get_priority(error)
         self.tree.update(idx, p)
+
+    def save(self, path):
+        f = open(path, 'wb')
+        pickle.dump({"tree": self.tree}, f)
+        f.close()
+
+    def load_memory(self, path):
+        with open(path, 'rb') as f:
+            _memory = pickle.load(f)
+        self.tree = _memory['tree']
 
