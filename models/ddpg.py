@@ -351,14 +351,24 @@ class DDPG(object):
 
     def add_sample(self, state, action, reward, next_state, terminate):
         self.critic.eval()
+        self.actor.eval()
         self.target_critic.eval()
-
-        current_value = self.critic(self.totensor([state.tolist()]))
+        self.target_critic.train()
+        batch_state = self.normalizer([state.tolist()])
+        batch_next_state = self.normalizer([next_state.tolist()])
+        current_value = self.critic(batch_state, self.totensor([action.tolist()]))
+        target_action = self.target_actor(batch_next_state)
         target_value = self.totensor([reward]) \
             + self.totensor([0 if x else 1 for x in [terminate]]) \
-            * self.target_critic(self.totensor([next_state.tolist()])) * self.gamma
+            * self.target_critic(batch_next_state, target_action) * self.gamma
         error = float(torch.abs(current_value - target_value).data.numpy()[0])
+        
+        self.target_actor.train()
+        self.actor.train()
+        self.critic.train()
+        self.target_critic.train()
         self.replay_memory.add(error, (state, action, reward, next_state, terminate))
+
 
     def update(self):
         """ Update the Actor and Critic with a batch data
