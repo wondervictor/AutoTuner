@@ -353,7 +353,7 @@ class DDPG(object):
         self.critic.eval()
         self.actor.eval()
         self.target_critic.eval()
-        self.target_critic.train()
+        self.target_actor.eval()
         batch_state = self.normalizer([state.tolist()])
         batch_next_state = self.normalizer([next_state.tolist()])
         current_value = self.critic(batch_state, self.totensor([action.tolist()]))
@@ -362,7 +362,7 @@ class DDPG(object):
             + self.totensor([0 if x else 1 for x in [terminate]]) \
             * self.target_critic(batch_next_state, target_action) * self.gamma
         error = float(torch.abs(current_value - target_value).data.numpy()[0])
-        
+
         self.target_actor.train()
         self.actor.train()
         self.critic.train()
