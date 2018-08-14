@@ -392,7 +392,7 @@ class DDPG(object):
         error = torch.abs(current_value-next_value).data.numpy()
         for i in range(self.batch_size):
             idx = idx[i]
-            self.replay_memory.update(idx, error[i])
+            self.replay_memory.update(idx, error[i][0])
 
         loss = self.loss_criterion(current_value, next_value)
         self.critic_optimizer.zero_grad()
