@@ -373,7 +373,7 @@ class DDPG(object):
     def update(self):
         """ Update the Actor and Critic with a batch data
         """
-        idx, states, next_states, actions, rewards, terminates = self._sample_batch()
+        idxs, states, next_states, actions, rewards, terminates = self._sample_batch()
         batch_states = self.normalizer(states)# totensor(states)
         batch_next_states = self.normalizer(next_states)# Variable(torch.FloatTensor(next_states))
         batch_actions = self.totensor(actions)
@@ -391,8 +391,8 @@ class DDPG(object):
         # update prioritized memory
         error = torch.abs(current_value-next_value).data.numpy()
         for i in range(self.batch_size):
-            idx = idx[i]
-            self.replay_memory.update(idx, error[i])
+            idx = idxs[i]
+            self.replay_memory.update(idx, error[i][0])
 
         loss = self.loss_criterion(current_value, next_value)
         self.critic_optimizer.zero_grad()
