@@ -211,10 +211,10 @@ class MySQLEnv(object):
         flag = self._apply_knobs(knob)
         restart_time = utils.time_end(restart_time)
         if not flag:
-            return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
+            return -10000000.0, np.array([0] * self.num_metric), True, self.score - 10000000, [0, 0, 0], restart_time
         s = self._get_state(knob, method=self.method)
         if s is None:
-            return -100.0, np.array([0] * self.num_metric), True, self.score - 100, [0, 0, 0], restart_time
+            return -10000000.0, np.array([0] * self.num_metric), True, self.score - 10000000, [0, 0, 0], restart_time
         external_metrics, internal_metrics = s
 
         reward = self._get_reward(external_metrics)
