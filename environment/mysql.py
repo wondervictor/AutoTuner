@@ -345,6 +345,8 @@ class MySQLEnv(object):
         print(lat_reward)
         print(reward)
         print('$$$$$$$$$$$$$$$$$$$$$$')
+        if reward > 0:
+            reward = reward*1000000
         return reward
 
     def _terminate(self):
